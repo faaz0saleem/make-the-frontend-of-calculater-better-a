@@ -150,8 +150,8 @@
 .progress i { position: absolute; left: 0; top: 0; bottom: 0; background: linear-gradient(90deg, var(--mint), #63dcbd); border-radius: 999px; }
 .progress .flag { position: absolute; right: 2px; top: -1px; font-size: 12px; }
 .hud-dist { font-weight: 700; color: var(--cream); text-shadow: 0 2px 0 var(--ink); font-size: 1.15em; }
-.stab { position: absolute; left: calc(var(--pad) + var(--safe-l)); top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; align-items: center; gap: 6px; }
-.stab-bar { width: 26px; height: min(34vh, 220px); border: 3px solid var(--ink); border-radius: 14px; background: rgba(255,250,241,.85); position: relative; overflow: hidden; box-shadow: 0 3px 0 var(--ink); }
+.stab { position: absolute; left: calc(var(--pad) * 1.5 + var(--safe-l)); bottom: calc(var(--pad) * 1.5 + var(--safe-b)); display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.stab-bar { width: 26px; height: min(26vh, 190px); border: 3px solid var(--ink); border-radius: 14px; background: rgba(255,250,241,.85); position: relative; overflow: hidden; box-shadow: 0 3px 0 var(--ink); }
 .stab-bar i { position: absolute; left: 0; right: 0; bottom: 0; border-radius: 10px; background: var(--mint); transition: background .15s; }
 .stab-bar .ticks { position: absolute; inset: 0; background: repeating-linear-gradient(0deg, transparent 0 19%, rgba(36,48,74,.25) 19% 20%); }
 .stab-icon { width: 46px; height: 46px; border-radius: 50%; background: var(--paper); border: 3px solid var(--ink); display: flex; align-items: center; justify-content: center; box-shadow: 0 3px 0 var(--ink); }
@@ -262,7 +262,7 @@
   .mode-card { min-height: 74px; padding: .5em .7em; }
   .lvl { aspect-ratio: 1 / .62; }
   .lvl .num { font-size: 1.25em; }
-  .stab-bar { height: 30vh; }
+  .stab-bar { height: 22vh; }
   .results h2 { font-size: 1.5em; }
 }
 @media (max-width: 760px) and (orientation: portrait) {

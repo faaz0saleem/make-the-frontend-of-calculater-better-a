@@ -24,6 +24,7 @@ import type { PlacedChunk } from '../sim/builder';
 import { RunSession, type RunMode } from '../sim/run';
 import { Hud } from '../ui/hud';
 import { RunView } from './runView';
+import { GameplayGate } from './lifecycle';
 import { Autopilot } from '../sim/autopilot';
 
 export interface RunRequest {
@@ -58,6 +59,7 @@ export class Game {
   readonly ads: AdController;
   readonly thumbs: Thumbnailer;
   readonly loop: FixedLoop;
+  readonly gate: GameplayGate;
   ui!: UiBridge;
   run: RunSession | null = null;
   view: RunView | null = null;
@@ -105,6 +107,7 @@ export class Game {
     this.input.settings.sensitivity = s.sensitivity;
     this.input.onAnyInput = () => this.audio.resumeIfNeeded();
     this.ads = new AdController(platform, this.pause, this.audio);
+    this.gate = new GameplayGate(platform);
     this.loop = new FixedLoop({ step: (dt) => this.step(dt), render: (a, fdt) => this.render(a, fdt) }, TUNING.simHz, 12);
     this.applySettings();
     this.bindLifecycle();
@@ -186,13 +189,11 @@ export class Game {
 
   /** gameplayStart/Stop strictly mirror real active driving. */
   private updateGameplayState(): void {
-    const active = this.fsm.state === 'driving' && !this.pause.paused && !!this.run && this.run.state === 'running';
-    if (active === this.gameplayActive) return;
-    this.gameplayActive = active;
-    if (active) this.platform.gameplayStart();
-    else this.platform.gameplayStop();
-    this.input.enabled = active;
-    if (!active) this.audio.duckDrive(true);
+    const changed = this.gate.update(this.fsm.state === 'driving', this.pause.paused, !!this.run && this.run.state === 'running');
+    if (!changed) return;
+    this.gameplayActive = this.gate.active;
+    this.input.enabled = this.gameplayActive;
+    if (!this.gameplayActive) this.audio.duckDrive(true);
   }
 
   get isGameplayActive(): boolean {

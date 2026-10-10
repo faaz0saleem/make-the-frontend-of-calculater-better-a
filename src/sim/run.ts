@@ -177,7 +177,9 @@ export class RunSession {
     const rear = tr.s - tr.h.length * 0.5;
     const feats = track.features;
     while (this.featIdx > 0 && this.featIdx >= feats.length) this.featIdx = feats.length - 1;
-    while (this.featIdx > 0 && feats[this.featIdx - 1].s + 60 > rear) this.featIdx--;
+    // Walk back over recently started features (long medians/gusts are kept because the forward
+    // scan below never skips a feature that is not fully behind the truck).
+    while (this.featIdx > 0 && feats[this.featIdx - 1].s + 100 > rear) this.featIdx--;
     while (this.featIdx < feats.length && feats[this.featIdx].s + feats[this.featIdx].len < rear - 30) this.featIdx++;
     let inPuddle = false;
     for (let i = this.featIdx; i < feats.length; i++) {
