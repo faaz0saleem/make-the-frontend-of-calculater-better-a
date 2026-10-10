@@ -34,6 +34,8 @@ export const ICONS = {
   star: svg(`<path d="M24 5l5.6 12 13 1.4-9.7 8.8 2.8 12.8L24 33.5 12.3 40l2.8-12.8L5.4 18.4l13-1.4z" fill="#ffc93c" ${S}/>`),
   paint: svg(`<path d="M10 30c-4-14 10-24 22-20 9 3 8 12 1 12-4 0-5 4-2 6 4 3-1 8-8 8-6 0-11-2-13-6z" fill="#fff6e6" ${S}/><circle cx="18" cy="22" r="3" fill="#ff5a4e"/><circle cx="25" cy="17" r="3" fill="#3cc9a7"/><circle cx="16" cy="30" r="3" fill="#6cb4ee"/>`),
   wrench: svg(`<path d="M30 8a9 9 0 0 0-9 12L8 33a4 4 0 0 0 6 6l13-13a9 9 0 0 0 12-9l-6 3-5-5z" fill="#d9dde4" ${S}/>`),
+  drop: svg(`<path d="M24 6c7 10 12 16 12 23a12 12 0 0 1-24 0c0-7 5-13 12-23z" fill="#6cb4ee" ${S}/>`),
+  flag: svg(`<path d="M10 42V6" ${S}/><path d="M12 8h24l-5 7 5 7H12z" fill="#fff6e6" ${S}/><path d="M18 8v14M24 8v14M30 8v14" stroke="#24304a" stroke-width="2"/>`),
   truck: svg(`<rect x="5" y="17" width="23" height="15" rx="3" fill="#ff5a4e" ${S}/><path d="M28 21h7l7 6v5H28z" fill="#ff5a4e" ${S}/><circle cx="14" cy="35" r="4.5" fill="#24304a"/><circle cx="35" cy="35" r="4.5" fill="#24304a"/>`),
 };
 

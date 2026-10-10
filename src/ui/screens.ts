@@ -167,7 +167,7 @@ export class UiRoot implements UiBridge {
     const tabs = h('div', { class: 'tabs' });
     for (const w of [1, 2, 3] as WorldId[]) {
       const unlocked = st.worldUnlocked(w);
-      const t = h('button', { class: `tab ${w === world ? 'on' : ''} ${unlocked ? '' : 'locked'}`, type: 'button', 'data-testid': `tab-world-${w}` }, unlocked ? WORLD_NAMES[w] : `🔒 ${WORLD_NAMES[w]}`);
+      const t = h('button', { class: `tab ${w === world ? 'on' : ''} ${unlocked ? '' : 'locked'}`, type: 'button', 'data-testid': `tab-world-${w}` }, unlocked ? null : h('span', { class: 'tab-ico', html: ICONS.lock }), WORLD_NAMES[w]);
       t.addEventListener('click', () => { this.click(); this.show('levelSelect', w); });
       tabs.append(t);
     }
@@ -212,7 +212,7 @@ export class UiRoot implements UiBridge {
     const eq = VEHICLES[g.store.data.garage.equipped];
     const start = btn({ cls: 'big mint', icon: 'play', label: 'Drive!', testid: 'btn-drive', onClick: () => { this.click(); g.startRun({ mode: 'campaign', levelId: lv.id }); } });
     start.setAttribute('data-autofocus', '');
-    const mods = [lv.wind ? h('span', { class: 'tag' }, '💨 Windy') : null, lv.wet ? h('span', { class: 'tag' }, '🌧 Wet roads') : null];
+    const mods = [lv.wind ? h('span', { class: 'tag', html: `${ICONS.wind}<span>Windy</span>` }) : null, lv.wet ? h('span', { class: 'tag', html: `${ICONS.drop}<span>Wet roads</span>` }) : null];
     return h('div', { class: 'layer center screen-dim fade-in', 'data-testid': 'screen-briefing' },
       h('div', { class: 'sheet brief panel pop-in' },
         h('div', { class: 'row' }, h('span', { class: 'tag sun world-tag' }, `${WORLD_NAMES[lv.world]} · ${idx}/10`), ...mods),

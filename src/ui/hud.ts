@@ -57,7 +57,7 @@ export class Hud {
     } else {
       const fill = h('i');
       this.progFill = fill;
-      tc.append(h('div', { class: 'progress', title: 'Route progress' }, fill, h('span', { class: 'flag' }, '🏁')));
+      tc.append(h('div', { class: 'progress', title: 'Route progress' }, fill, h('span', { class: 'flag', html: ICONS.flag })));
       if (mode === 'daily') {
         this.distEl = h('div', { class: 'hud-dist' }, '0 m');
         tc.append(this.distEl);
