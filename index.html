@@ -1,35 +1,22 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calculator</title>
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
-    <div class="calculator">
-        <input type="text" id="display" disabled>
-        <div class="buttons">
-            <button id="clear">C</button>
-            <button id="backspace">&lt;</button>
-            <button id="divide">/</button>
-            <button id="multiply">*</button>
-            <button id="seven">7</button>
-            <button id="eight">8</button>
-            <button id="nine">9</button>
-            <button id="subtract">-</button>
-            <button id="four">4</button>
-            <button id="five">5</button>
-            <button id="six">6</button>
-            <button id="add">+</button>
-            <button id="one">1</button>
-            <button id="two">2</button>
-            <button id="three">3</button>
-            <button id="equals">=</button>
-            <button id="zero">0</button>
-            <button id="decimal">.</button>
-        </div>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#24304a" />
+    <title>Wobble Haul</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='14' y='6' width='22' height='14' rx='3' fill='%23ffc93c'/%3E%3Crect x='18' y='20' width='18' height='12' rx='3' fill='%233cc9a7'/%3E%3Crect x='6' y='32' width='52' height='16' rx='6' fill='%23ff5a4e'/%3E%3Ccircle cx='18' cy='50' r='7' fill='%2324304a'/%3E%3Ccircle cx='46' cy='50' r='7' fill='%2324304a'/%3E%3C/svg%3E" />
+  </head>
+  <body>
+    <div id="app">
+      <canvas id="game" aria-label="Wobble Haul game view"></canvas>
+      <div id="ui" class="ui-root"></div>
+      <div id="boot" class="boot">
+        <div class="boot-logo">WOBBLE<span>HAUL</span></div>
+        <div class="boot-bar"><i id="boot-fill"></i></div>
+        <noscript>This game needs JavaScript enabled.</noscript>
+      </div>
     </div>
-    <script src="script.js"></script>
-</body>
+    <script type="module" src="./src/main.ts"></script>
+  </body>
 </html>
