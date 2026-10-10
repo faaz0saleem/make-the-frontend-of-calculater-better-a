@@ -1,11 +1,11 @@
 {
   "dir": "dist",
-  "fileCount": 9,
-  "totalBytes": 1022533,
-  "initialBytes": 962217,
-  "totalMB": 0.975,
-  "initialMB": 0.918,
-  "gzipTotalMB": 0.34,
+  "fileCount": 12,
+  "totalBytes": 1029275,
+  "initialBytes": 968959,
+  "totalMB": 0.982,
+  "initialMB": 0.924,
+  "gzipTotalMB": 0.343,
   "checks": {
     "total_le_250MB": true,
     "files_le_1500": true,
@@ -18,14 +18,14 @@
   },
   "files": [
     {
-      "path": "assets/index-CKYYuXV3.js",
-      "bytes": 889260,
-      "gz": 241284
+      "path": "assets/index-5ydbPMRx.js",
+      "bytes": 890003,
+      "gz": 241527
     },
     {
-      "path": "assets/index-BBjNBImQ.css",
-      "bytes": 23221,
-      "gz": 5641
+      "path": "assets/index-DDZdUCXM.css",
+      "bytes": 23436,
+      "gz": 5687
     },
     {
       "path": "assets/fredoka-latin-600-normal-CcrEjrB4.woff",
@@ -58,9 +58,24 @@
       "gz": 15923
     },
     {
+      "path": "licenses/Fredoka-OFL-1.1.txt",
+      "bytes": 4387,
+      "gz": 1975
+    },
+    {
       "path": "index.html",
       "bytes": 1292,
-      "gz": 649
+      "gz": 648
+    },
+    {
+      "path": "licenses/three.js-MIT.txt",
+      "bytes": 1081,
+      "gz": 667
+    },
+    {
+      "path": "licenses/README.txt",
+      "bytes": 316,
+      "gz": 246
     }
   ]
 }

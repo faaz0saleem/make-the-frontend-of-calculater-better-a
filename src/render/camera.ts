@@ -11,6 +11,8 @@ export class FollowCamera {
   private stackH = 0;
   private initialized = false;
   shakeScale = 1;
+  /** Capture/media framing: camera placed relative to the truck in the road frame. */
+  override: { back: number; side: number; up: number; lookAhead: number; lookUp: number; lookSide?: number } | null = null;
   reducedMotion = false;
   aspect = 16 / 9;
 
@@ -70,6 +72,13 @@ export class FollowCamera {
       desired.y += height;
       target.copy(truckPos).addScaledVector(fwd, ahead).addScaledVector(right, -lat * 0.15);
       target.y += lookUp;
+    }
+    if (this.override) {
+      const o = this.override;
+      desired.copy(truckPos).addScaledVector(fwd, -o.back).addScaledVector(right, o.side);
+      desired.y += o.up;
+      target.copy(truckPos).addScaledVector(fwd, o.lookAhead).addScaledVector(right, o.lookSide ?? 0);
+      target.y += o.lookUp;
     }
     // Never let the camera pass through low structures (beams, tunnels, the finish arch).
     if (desired.y > truckPos.y + ceiling) desired.y = truckPos.y + ceiling;

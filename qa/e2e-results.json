@@ -62,13 +62,13 @@
   },
   "suites": [
     {
-      "title": "input.spec.ts",
-      "file": "input.spec.ts",
+      "title": "screens.spec.ts",
+      "file": "screens.spec.ts",
       "column": 0,
       "line": 0,
       "specs": [
         {
-          "title": "keyboard steering, Space shed, P pause",
+          "title": "screens at 907x510",
           "ok": true,
           "tags": [],
           "tests": [
@@ -83,12 +83,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 10784,
+                  "duration": 53279,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-10T22:32:59.297Z",
+                  "startTime": "2026-10-10T22:34:34.556Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -96,13 +96,13 @@
               "status": "expected"
             }
           ],
-          "id": "62978389d577d9e03e88-7cd72557245a68ddf748",
-          "file": "input.spec.ts",
-          "line": 6,
-          "column": 1
+          "id": "2676ef668c5398eed988-af1bb13eeff66c54dcc0",
+          "file": "screens.spec.ts",
+          "line": 49,
+          "column": 3
         },
         {
-          "title": "mouse drag steers; releasing stops steering",
+          "title": "screens at 1216x684",
           "ok": true,
           "tags": [],
           "tests": [
@@ -117,12 +117,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 12994,
+                  "duration": 78080,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-10T22:33:10.169Z",
+                  "startTime": "2026-10-10T22:35:27.936Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -130,63 +130,359 @@
               "status": "expected"
             }
           ],
-          "id": "62978389d577d9e03e88-34816f1dca5dbd9b11ae",
-          "file": "input.spec.ts",
-          "line": 31,
-          "column": 1
-        }
-      ],
-      "suites": [
+          "id": "2676ef668c5398eed988-faf460ae92dc5e9b3437",
+          "file": "screens.spec.ts",
+          "line": 49,
+          "column": 3
+        },
         {
-          "title": "touch",
-          "file": "input.spec.ts",
-          "line": 44,
-          "column": 6,
-          "specs": [
+          "title": "screens at 1077x606",
+          "ok": true,
+          "tags": [],
+          "tests": [
             {
-              "title": "horizontal touch drag steers and the SHED button works",
-              "ok": true,
-              "tags": [],
-              "tests": [
+              "timeout": 240000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
                 {
-                  "timeout": 240000,
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 65167,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-10T22:36:46.032Z",
                   "annotations": [],
-                  "expectedStatus": "passed",
-                  "projectId": "",
-                  "projectName": "",
-                  "results": [
-                    {
-                      "workerIndex": 0,
-                      "parallelIndex": 0,
-                      "status": "passed",
-                      "duration": 12377,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-10-10T22:33:23.190Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "attachments": []
                 }
               ],
-              "id": "62978389d577d9e03e88-fe5348781fb6b9d0dbfc",
-              "file": "input.spec.ts",
-              "line": 46,
-              "column": 3
+              "status": "expected"
             }
-          ]
+          ],
+          "id": "2676ef668c5398eed988-5a27ecef7370ced740a0",
+          "file": "screens.spec.ts",
+          "line": 49,
+          "column": 3
+        },
+        {
+          "title": "screens at 821x462",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 240000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 44058,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-10T22:37:51.219Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "2676ef668c5398eed988-f818b9728a6e62de3225",
+          "file": "screens.spec.ts",
+          "line": 49,
+          "column": 3
+        },
+        {
+          "title": "screens at 1366x768",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 240000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 88070,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-10T22:38:35.288Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "2676ef668c5398eed988-3f1374ca1eda3d2cbf98",
+          "file": "screens.spec.ts",
+          "line": 49,
+          "column": 3
+        },
+        {
+          "title": "screens at 1920x1080",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 240000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 160058,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-10T22:40:03.369Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "2676ef668c5398eed988-d5b4b4e10d3db7cd0455",
+          "file": "screens.spec.ts",
+          "line": 49,
+          "column": 3
+        },
+        {
+          "title": "screens at 1536x864",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 240000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 118607,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-10T22:42:43.437Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "2676ef668c5398eed988-55366f19b43f045b8404",
+          "file": "screens.spec.ts",
+          "line": 49,
+          "column": 3
+        },
+        {
+          "title": "screens at 1280x720",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 240000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 97077,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-10T22:44:42.056Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "2676ef668c5398eed988-f4aa68b94afae8273d1f",
+          "file": "screens.spec.ts",
+          "line": 49,
+          "column": 3
+        },
+        {
+          "title": "screens at 800x450",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 240000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 47283,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-10T22:46:19.147Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "2676ef668c5398eed988-8c4931843cfcb915bc49",
+          "file": "screens.spec.ts",
+          "line": 49,
+          "column": 3
+        },
+        {
+          "title": "screens at 1080x607",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 240000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 62020,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-10T22:47:06.458Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "2676ef668c5398eed988-3a774f2631bc7143ff6a",
+          "file": "screens.spec.ts",
+          "line": 49,
+          "column": 3
+        },
+        {
+          "title": "screens at 390x844",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 240000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 41667,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-10T22:48:08.497Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "2676ef668c5398eed988-8f235e56f252e3cd6f70",
+          "file": "screens.spec.ts",
+          "line": 49,
+          "column": 3
+        },
+        {
+          "title": "screens at 844x390",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 240000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 45428,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-10T22:48:50.178Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "2676ef668c5398eed988-4afa4833456c183fd2d3",
+          "file": "screens.spec.ts",
+          "line": 49,
+          "column": 3
         }
       ]
     }
   ],
   "errors": [],
   "stats": {
-    "startTime": "2026-10-10T22:32:58.165Z",
-    "duration": 39823.096000000005,
-    "expected": 3,
+    "startTime": "2026-10-10T22:34:33.356Z",
+    "duration": 902343.689,
+    "expected": 12,
     "skipped": 0,
     "unexpected": 0,
     "flaky": 0

@@ -248,10 +248,10 @@
 .seg button { font: 600 .9em Fredoka, system-ui; border: 0; padding: .45em .7em; background: var(--cream); cursor: pointer; color: var(--ink); min-height: 40px; }
 .seg button + button { border-left: 2px solid var(--ink); }
 .seg button.on { background: var(--sun); }
-.toggle { width: 58px; height: 34px; border-radius: 999px; border: 3px solid var(--ink); background: #ddd5c6; position: relative; cursor: pointer; flex: none; }
-.toggle::after { content: ''; position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: #fff; border: 2px solid var(--ink); transition: left .15s; }
+.toggle { width: 66px; height: 40px; border-radius: 999px; border: 3px solid var(--ink); background: #ddd5c6; position: relative; cursor: pointer; flex: none; }
+.toggle::after { content: ''; position: absolute; top: 4px; left: 4px; width: 26px; height: 26px; border-radius: 50%; background: #fff; border: 2px solid var(--ink); transition: left .15s; }
 .toggle.on { background: var(--mint); }
-.toggle.on::after { left: 27px; }
+.toggle.on::after { left: 30px; }
 .daily-card { display: flex; gap: var(--pad); align-items: center; flex-wrap: wrap; }
 .ad-offer { display: flex; gap: var(--pad); justify-content: center; flex-wrap: wrap; margin-top: .6em; }
 .ad-offer .btn { flex: 1 1 200px; }

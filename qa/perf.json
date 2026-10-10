@@ -1,0 +1,82 @@
+{
+  "environment": {
+    "browser": "Chromium 141.0.7390.37 headless",
+    "gl": "ANGLE SwiftShader (software rasteriser)",
+    "viewport": "1280x720 @1x",
+    "node": "v22.22.0",
+    "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)"
+  },
+  "boot": {
+    "note": "Cold context each time, local HTTP server, no network latency, no CrazyGames SDK (standalone platform).",
+    "runs": [
+      {
+        "wallMs": 2096,
+        "menuAtMs": 2068,
+        "domContentLoadedMs": 70,
+        "loadEventMs": 84,
+        "transferKB": 941,
+        "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)"
+      },
+      {
+        "wallMs": 1315,
+        "menuAtMs": 1301,
+        "domContentLoadedMs": 86,
+        "loadEventMs": 87,
+        "transferKB": 941,
+        "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)"
+      },
+      {
+        "wallMs": 1626,
+        "menuAtMs": 1606,
+        "domContentLoadedMs": 74,
+        "loadEventMs": 89,
+        "transferKB": 941,
+        "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)"
+      }
+    ]
+  },
+  "fps": {
+    "note": "Long Haul with the scripted driver, 20 s sample after 5 s warm-up. Software GL: FPS is not representative of player hardware; draw calls / triangles are.",
+    "presets": {
+      "low": {
+        "seconds": 20,
+        "fps": 2.7,
+        "avgDrawCalls": 63,
+        "maxDrawCalls": 70,
+        "avgTriangles": 189953,
+        "worstFrameMs": 1025,
+        "geometries": 54,
+        "textures": 11,
+        "programs": 19,
+        "heapMB": 36.3,
+        "preset": "low"
+      },
+      "medium": {
+        "seconds": 20,
+        "fps": 1.05,
+        "avgDrawCalls": 80,
+        "maxDrawCalls": 84,
+        "avgTriangles": 281854,
+        "worstFrameMs": 3338,
+        "geometries": 59,
+        "textures": 11,
+        "programs": 22,
+        "heapMB": 42.5,
+        "preset": "medium"
+      },
+      "high": {
+        "seconds": 20,
+        "fps": 0.7,
+        "avgDrawCalls": 100,
+        "maxDrawCalls": 102,
+        "avgTriangles": 343950,
+        "worstFrameMs": 2629,
+        "geometries": 61,
+        "textures": 24,
+        "programs": 29,
+        "heapMB": 47.8,
+        "preset": "high"
+      }
+    }
+  }
+}

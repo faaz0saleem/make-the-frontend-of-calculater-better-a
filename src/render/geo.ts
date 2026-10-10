@@ -22,6 +22,19 @@ const _c = new THREE.Color();
  * Accumulates coloured primitives and merges them into a single vertex-coloured geometry.
  * Used for every procedural model so each model is one draw call with a shared material.
  */
+/** Low geometric detail for world scenery on the Low preset (fewer rounding segments, coarser curves). */
+let lowDetail = false;
+export function withLowDetail<T>(on: boolean, fn: () => T): T {
+  const prev = lowDetail;
+  lowDetail = on;
+  try {
+    return fn();
+  } finally {
+    lowDetail = prev;
+  }
+}
+const seg = (n: number): number => (lowDetail ? Math.max(5, Math.round(n * 0.55)) : n);
+
 export class Kit {
   private parts: THREE.BufferGeometry[] = [];
 
@@ -53,25 +66,25 @@ export class Kit {
   /** Rounded box; r = corner radius (0 for a plain box). */
   box(w: number, h: number, d: number, color: number, x = 0, y = 0, z = 0, t: XForm & { r?: number; seg?: number } = {}): this {
     const r = Math.min(t.r ?? 0, Math.min(w, h, d) * 0.49);
-    const geo = r > 0.001 ? new RoundedBoxGeometry(w, h, d, t.seg ?? 2, r) : new THREE.BoxGeometry(w, h, d);
+    const geo = r > 0.001 ? new RoundedBoxGeometry(w, h, d, lowDetail ? 1 : t.seg ?? 2, r) : new THREE.BoxGeometry(w, h, d);
     return this.add(geo, color, x, y, z, t);
   }
 
   cyl(rt: number, rb: number, h: number, color: number, x = 0, y = 0, z = 0, t: XForm & { seg?: number } = {}): this {
-    return this.add(new THREE.CylinderGeometry(rt, rb, h, t.seg ?? 14), color, x, y, z, t);
+    return this.add(new THREE.CylinderGeometry(rt, rb, h, seg(t.seg ?? 14)), color, x, y, z, t);
   }
 
   sphere(r: number, color: number, x = 0, y = 0, z = 0, t: XForm & { seg?: number } = {}): this {
-    const seg = t.seg ?? 12;
-    return this.add(new THREE.SphereGeometry(r, seg, Math.max(6, Math.round(seg * 0.7))), color, x, y, z, t);
+    const n = seg(t.seg ?? 12);
+    return this.add(new THREE.SphereGeometry(r, n, Math.max(5, Math.round(n * 0.7))), color, x, y, z, t);
   }
 
   cone(r: number, h: number, color: number, x = 0, y = 0, z = 0, t: XForm & { seg?: number } = {}): this {
-    return this.add(new THREE.ConeGeometry(r, h, t.seg ?? 12), color, x, y, z, t);
+    return this.add(new THREE.ConeGeometry(r, h, seg(t.seg ?? 12)), color, x, y, z, t);
   }
 
   torus(r: number, tube: number, color: number, x = 0, y = 0, z = 0, t: XForm & { seg?: number; arc?: number } = {}): this {
-    return this.add(new THREE.TorusGeometry(r, tube, 6, t.seg ?? 16, t.arc ?? Math.PI * 2), color, x, y, z, t);
+    return this.add(new THREE.TorusGeometry(r, tube, lowDetail ? 4 : 6, seg(t.seg ?? 16), t.arc ?? Math.PI * 2), color, x, y, z, t);
   }
 
   /** Extruded 2D shape along local Z (depth). */

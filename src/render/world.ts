@@ -4,7 +4,7 @@ import { FORK_LANE } from '../data/chunks';
 import type { PlacedChunk } from '../sim/builder';
 import type { Track } from '../sim/track';
 import type { EdgeKind, Feature, Pose, WorldId } from '../sim/types';
-import { Kit, shade } from './geo';
+import { Kit, shade, withLowDetail } from './geo';
 import { MAT, TEX } from './materials';
 import { makeCargoMesh } from './models/cargo';
 import { barrierKit, bumpKit, cartKit, coneKit, signMaterial, signPostKit } from './models/props';
@@ -188,10 +188,12 @@ export class WorldView {
     road.userData.ownGeo = true;
     group.add(road);
     // ---------------- markings, curbs, edges, ground, scenery
-    ctx.markings(pc.s0, pc.s1, gaps);
-    ctx.edges(pc.s0, pc.s1, gaps);
-    ctx.scenery(pc.s0, pc.s1, pc.features);
-    for (const f of pc.features) this.addFeature(ctx, view, track, f, pc);
+    withLowDetail(this.quality.sceneryDensity < 0.5, () => {
+      ctx.markings(pc.s0, pc.s1, gaps);
+      ctx.edges(pc.s0, pc.s1, gaps);
+      ctx.scenery(pc.s0, pc.s1, pc.features);
+      for (const f of pc.features) this.addFeature(ctx, view, track, f, pc);
+    });
     // ---------------- assemble merged meshes
     const stat = ctx.kit.build();
     const mesh = new THREE.Mesh(stat, MAT.scenery);

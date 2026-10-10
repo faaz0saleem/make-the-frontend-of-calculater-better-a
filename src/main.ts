@@ -5,6 +5,7 @@ import { selectPlatform } from './platform/select';
 import { ProgressStore } from './progression/store';
 import { UiRoot } from './ui/screens';
 import { Autopilot } from './sim/autopilot';
+import { CARGO } from './data/cargo';
 
 const params = new URLSearchParams(location.search);
 const bootFill = document.getElementById('boot-fill') as HTMLElement | null;
@@ -93,6 +94,7 @@ async function boot(): Promise<void> {
         for (let i = 0; i < n; i++) game.advance(dt);
       },
       note,
+      ...(__CAPTURE_MODE__ ? { Autopilot, cargo: CARGO } : {}),
     };
   }
 }
