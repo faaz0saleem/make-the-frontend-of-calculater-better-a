@@ -1,10 +1,10 @@
 {
   "dir": "dist",
   "fileCount": 12,
-  "totalBytes": 1028354,
-  "initialBytes": 962254,
-  "totalMB": 0.981,
-  "initialMB": 0.918,
+  "totalBytes": 1029409,
+  "initialBytes": 963309,
+  "totalMB": 0.982,
+  "initialMB": 0.919,
   "gzipTotalMB": 0.343,
   "checks": {
     "total_le_250MB": true,
@@ -21,9 +21,9 @@
   },
   "files": [
     {
-      "path": "assets/index-BsIe62nZ.js",
-      "bytes": 889082,
-      "gz": 241202
+      "path": "assets/index-tsB25GAs.js",
+      "bytes": 890137,
+      "gz": 241466
     },
     {
       "path": "assets/index-DDZdUCXM.css",

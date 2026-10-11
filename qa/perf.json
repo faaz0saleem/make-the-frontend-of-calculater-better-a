@@ -10,26 +10,26 @@
     "note": "Cold context each time, local HTTP server, no network latency, no CrazyGames SDK (standalone platform).",
     "runs": [
       {
-        "wallMs": 2096,
-        "menuAtMs": 2068,
-        "domContentLoadedMs": 70,
-        "loadEventMs": 84,
+        "wallMs": 2048,
+        "menuAtMs": 2018,
+        "domContentLoadedMs": 93,
+        "loadEventMs": 93,
         "transferKB": 941,
         "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)"
       },
       {
-        "wallMs": 1315,
-        "menuAtMs": 1301,
-        "domContentLoadedMs": 86,
-        "loadEventMs": 87,
+        "wallMs": 1339,
+        "menuAtMs": 1325,
+        "domContentLoadedMs": 764,
+        "loadEventMs": 1194,
         "transferKB": 941,
         "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)"
       },
       {
-        "wallMs": 1626,
-        "menuAtMs": 1606,
-        "domContentLoadedMs": 74,
-        "loadEventMs": 89,
+        "wallMs": 1228,
+        "menuAtMs": 1214,
+        "domContentLoadedMs": 673,
+        "loadEventMs": 1096,
         "transferKB": 941,
         "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)"
       }
