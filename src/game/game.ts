@@ -146,7 +146,11 @@ export class Game {
       this.pause.add('gpu');
       this.input.releaseAll();
     });
-    on(this.renderer.canvas, 'webglcontextrestored', () => this.pause.remove('gpu'));
+    on(this.renderer.canvas, 'webglcontextrestored', () => {
+      // Back to a working picture: show the pause menu first so the run only resumes on intent.
+      if (this.fsm.state === 'driving') this.openPause();
+      this.pause.remove('gpu');
+    });
     on(window, 'resize', () => this.renderer.resize(window.innerWidth, window.innerHeight));
     on(window, 'pointerdown', () => this.audio.resumeIfNeeded());
     // platform mute (overrides user volume; combined with other mute reasons)
@@ -698,7 +702,7 @@ export class Game {
   }
 
   private tickCountdown(dt: number): void {
-    if (this.pause.has('hidden') || this.pause.has('blur') || this.pause.has('ad') || this.fsm.state !== 'driving') return;
+    if (this.pause.has('hidden') || this.pause.has('blur') || this.pause.has('ad') || this.pause.has('gpu') || this.fsm.state !== 'driving') return;
     const before = Math.ceil(this.countdownLeft / 0.6);
     this.countdownLeft -= dt;
     const after = Math.ceil(this.countdownLeft / 0.6);

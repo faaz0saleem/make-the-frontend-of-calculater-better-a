@@ -1,8 +1,8 @@
 {
   "dir": "dist",
   "fileCount": 12,
-  "totalBytes": 1029409,
-  "initialBytes": 963309,
+  "totalBytes": 1029479,
+  "initialBytes": 963379,
   "totalMB": 0.982,
   "initialMB": 0.919,
   "gzipTotalMB": 0.343,
@@ -21,9 +21,9 @@
   },
   "files": [
     {
-      "path": "assets/index-tsB25GAs.js",
-      "bytes": 890137,
-      "gz": 241466
+      "path": "assets/index-CQwpKi9v.js",
+      "bytes": 890207,
+      "gz": 241483
     },
     {
       "path": "assets/index-DDZdUCXM.css",
@@ -68,7 +68,7 @@
     {
       "path": "index.html",
       "bytes": 1292,
-      "gz": 647
+      "gz": 648
     },
     {
       "path": "licenses/three.js-MIT.txt",
