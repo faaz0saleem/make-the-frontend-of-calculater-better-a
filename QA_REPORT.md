@@ -73,16 +73,26 @@ See the file for per-file sizes. Initial download (HTML + JS + CSS + fonts) ≈ 
 
 | Run | Navigation → interactive menu | DOMContentLoaded | Transferred |
 |---|---|---|---|
-| 1 | 2.07 s | 70 ms | 941 KB |
-| 2 | 1.30 s | 86 ms | 941 KB |
-| 3 | 1.61 s | 74 ms | 941 KB |
+| 1 | 2.02 s | 93 ms | 941 KB |
+| 2 | 1.32 s | 764 ms | 941 KB |
+| 3 | 1.21 s | 673 ms | 941 KB |
 
-Most of that time is shader compilation and scene setup in the software renderer.
+Most of that time is shader compilation and scene setup in the software renderer. The spread between runs comes from other processes sharing the container's 4 CPUs.
 
 ### Per-preset render cost, Long Haul, 1280×720
-PERF_TABLE
+Scripted driver, 20 s sample after a 5 s warm-up, one fresh Long Haul run per preset. The generated route differs between runs, so the numbers are indicative, not an exact A/B. Draw calls and triangles are summed over every render pass in a frame.
 
-Low-preset fix made during QA: the first measurement showed ~190k triangles per frame at Low, ~160k of them from rounded-box scenery. World scenery is now built with fewer rounding segments and coarser curves at Low (`withLowDetail` in `src/render/geo.ts`), which cut scenery triangles by about 55 % with no visible change at gameplay distance (checked by screenshot). Trucks and cargo keep full detail.
+| Preset | Draw calls / frame | Triangles / frame | Geometries / textures / programs | JS heap | FPS (SwiftShader) | Worst frame (SwiftShader) |
+|---|---|---|---|---|---|---|
+| Low | 79 (max 87) | 107,188 | 58 / 11 / 19 | 23.7 MB | 1.6 | 1482 ms |
+| Medium | 85 (max 92) | 268,213 | 59 / 11 / 19 | 40.3 MB | 0.8 | 2821 ms |
+| High | 90 (max 90) | 359,888 | 56 / 23 / 28 | 49.1 MB | 0.45 | 4623 ms |
+
+The FPS and frame-time columns are software-rendering numbers and were measured while other jobs (code reviewers) were using the same CPUs; they say nothing about player hardware. On any real GPU, ~80–90 draw calls and 0.1–0.4 M triangles per frame are modest.
+
+Low-preset fix made during QA: the first measurement showed ~190k triangles per frame at Low. A per-mesh breakdown in that scene (an in-session diagnostic, not committed) put ~160k of them in the merged rounded-box scenery. World scenery is now built with fewer rounding segments and coarser curves at Low (`withLowDetail` in `src/render/geo.ts`); the same diagnostic then showed the scenery at ~64–73k, and the committed measurement above shows ~107k per frame in total at Low. Trucks and cargo always keep full detail (`cargoGeometry` builds outside the low-detail mode), and the geometry caches are keyed by detail level. The look at gameplay distance was checked by screenshot; the Low screenshot matrix below was re-run on this build.
+
+These measurements were taken on the release build at 18:05 (`index-tsB25GAs.js`). The final ZIP (`index-CQwpKi9v.js`) differs only by the WebGL-context-restore pause fix, which does not touch rendering.
 
 ### Soak
 SOAK_SECTION
