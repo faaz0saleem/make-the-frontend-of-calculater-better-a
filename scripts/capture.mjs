@@ -2,10 +2,10 @@
 // Frames are produced by stepping the game's own clock at exactly 1/fps per frame, so playback
 // speed equals real game speed (no fast-forward). Usage:
 //   node scripts/capture.mjs covers
-//   node scripts/capture.mjs video landscape|portrait
+//   node scripts/capture.mjs video landscape|portrait [seconds=19]   (19 = CrazyGames preview; other lengths -> media/clip-<s>s-*.mp4)
 import { chromium } from '@playwright/test';
 import { execFileSync, spawn } from 'node:child_process';
-import { mkdirSync, rmSync, existsSync } from 'node:fs';
+import { mkdirSync, rmSync, existsSync, writeFileSync } from 'node:fs';
 
 const mode = process.argv[2] ?? 'covers';
 const variant = process.argv[3] ?? 'landscape';
@@ -91,7 +91,9 @@ if (mode === 'covers') {
   const portrait = variant === 'portrait';
   const W = portrait ? 1080 : 1920, H = portrait ? 1620 : 1080;
   const fps = 30;
-  const frames = `${OUT}/tmp-${variant}`;
+  // Total length in seconds (default 19: the CrazyGames preview). 2 frames of it are the cover.
+  const total = Number(process.argv[4] ?? 19);
+  const frames = `${OUT}/tmp-${variant}-${total}`;
   rmSync(frames, { recursive: true, force: true });
   mkdirSync(frames, { recursive: true });
   let n = 0;
@@ -100,20 +102,32 @@ if (mode === 'covers') {
     { req: { mode: 'campaign', levelId: 'c7' }, seconds: 9.5, dur: 6.5 },
     { req: { mode: 'campaign', levelId: 'm4' }, seconds: 11.5, dur: 6 },
   ];
+  // Share the gameplay frames between the clips in proportion to their nominal lengths.
+  const gameplayFrames = Math.round(total * fps) - 2;
+  const nominal = clips.reduce((a, c) => a + c.dur, 0);
+  let left = gameplayFrames;
+  clips.forEach((c, i) => {
+    c.frames = i === clips.length - 1 ? left : Math.round((gameplayFrames * c.dur) / nominal);
+    left -= c.frames;
+  });
   // first frame: the matching cover image
   const cover = portrait ? `${OUT}/cover-portrait-800x1200.png` : `${OUT}/cover-landscape-1920x1080.png`;
   if (!existsSync(cover)) throw new Error('render covers first');
   const { ctx, page } = await open(W, H, 1, '&capture=1');
   for (const c of clips) {
     await stage(page, { ...c, greed: 0.9, hideHud: true });
-    for (let i = 0; i < c.dur * fps; i++) {
-      await page.evaluate((dt) => window.__wh.tick(dt, 1), 1 / fps);
-      await page.screenshot({ path: `${frames}/f${String(n++).padStart(5, '0')}.jpg`, type: 'jpeg', quality: 92, timeout: 120000 });
+    for (let i = 0; i < c.frames; i++) {
+      // Read the WebGL canvas directly (the HUD is hidden anyway): ~2.5x faster than page screenshots.
+      const b64 = await page.evaluate((dt) => {
+        window.__wh.tick(dt, 1);
+        return document.getElementById('game').toDataURL('image/jpeg', 0.95).slice(23);
+      }, 1 / fps);
+      writeFileSync(`${frames}/f${String(n++).padStart(5, '0')}.jpg`, Buffer.from(b64, 'base64'));
     }
     console.log('clip done', c.req.levelId, n);
   }
   await ctx.close();
-  const out = `${OUT}/preview-${variant}-${W}x${H}.mp4`;
+  const out = total === 19 ? `${OUT}/preview-${variant}-${W}x${H}.mp4` : `${OUT}/clip-${total}s-${variant}-${W}x${H}.mp4`;
   // cover as the first frame (2 frames), then gameplay; no audio track
   execFileSync('ffmpeg', ['-y', '-loglevel', 'error',
     '-loop', '1', '-t', `${2 / fps}`, '-framerate', String(fps), '-i', cover,
