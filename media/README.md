@@ -22,7 +22,12 @@ How they are staged (be aware of this when judging them against the guidelines):
 Owner check: confirm in the portal that the title text on covers is acceptable for each format, and that the 800×1200 crop reads well in the portal's card layout.
 
 ## Preview videos
-VIDEO_TABLE
+| File | Size | Length | Frame rate | Codec | File size | Audio | First frame |
+|---|---|---|---|---|---|---|---|
+| `preview-landscape-1920x1080.mp4` (16:9) | 1920×1080 | 19.07 s (572 frames) | 30 fps | H.264 High, yuv420p | 20.1 MB | none (no audio stream) | `cover-landscape-1920x1080.png` |
+| `preview-portrait-1080x1620.mp4` (2:3) | 1080×1620 | 19.07 s (572 frames) | 30 fps | H.264 High, yuv420p | 17.9 MB | none (no audio stream) | `cover-portrait-800x1200.png`, scaled to 1080×1620 |
+
+Both are within the 15–20 s and ≤ 50 MB limits. Values above are from `ffprobe` on the committed files.
 
 How they are made:
 - Three clips of **real gameplay** (Harbor 6, Canyon 7, Midnight 4) driven by the scripted test driver (`src/sim/autopilot.ts`, the same one the unit tests use). Before each clip the run is simulated (not recorded) to an interesting stretch, so the clip starts mid-level.
