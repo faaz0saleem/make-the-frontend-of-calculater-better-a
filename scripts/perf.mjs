@@ -3,7 +3,8 @@
 // SwiftShader (software GL) container they say nothing about frame rate on real GPUs.
 //   node scripts/perf.mjs boot            boot-to-menu timing (3 cold loads)
 //   node scripts/perf.mjs fps             per-preset FPS / draw calls / triangles during Long Haul
-//   node scripts/perf.mjs soak <minutes>  real-time Long Haul soak at 4x sim speed (default 8 min); resource counters over time
+//   node scripts/perf.mjs soak <minutes> [speed]  real-time Long Haul soak (default 8 min at 4x sim speed); resource counters over time.
+//   The software renderer caps catch-up per frame, so the simulated time actually covered is measured and reported.
 import { chromium } from '@playwright/test';
 import { spawn } from 'node:child_process';
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
@@ -119,8 +120,9 @@ if (mode === 'boot') {
   result.fps = { note: 'Long Haul with the scripted driver, 20 s sample after 5 s warm-up. Software GL: FPS is not representative of player hardware; draw calls / triangles are.', presets };
 } else if (mode === 'soak') {
   const minutes = Number(process.argv[3] ?? 8);
+  const speed = Number(process.argv[4] ?? 4);
   const { ctx, frame } = await open('low');
-  await startEndless(frame, 4);
+  await startEndless(frame, speed);
   await installSampler(frame);
   const samples = [];
   let restarts = 0;
@@ -152,7 +154,7 @@ if (mode === 'boot') {
     if (st.runState !== 'running') {
       simDone += st.simSeconds;
       restarts++;
-      await startEndless(frame, 4);
+      await startEndless(frame, speed);
     }
   }
   await ctx.close();
@@ -164,8 +166,8 @@ if (mode === 'boot') {
     return [k, v.length ? [Math.min(...v), Math.max(...v)] : null];
   }));
   result.soak = {
-    note: `Real-time soak of ${minutes} min with the simulation at 4x (Low preset), driven by the scripted driver. A crash starts a fresh Long Haul run (counted as restarts), so run setup and teardown are exercised too.`,
-    realMinutes: minutes, totalSimMinutes: totalSimMin, longestRunSimMinutes: +(longestRun / 60).toFixed(2), restarts, range, samples,
+    note: `Real-time soak of ${minutes} min with the simulation sped up ${speed}x (Low preset; the software renderer limits how much of that speed-up is reached, see totalSimMinutes), driven by the scripted driver. A crash starts a fresh Long Haul run (counted as restarts), so run setup and teardown are exercised too.`,
+    realMinutes: minutes, speed, totalSimMinutes: totalSimMin, longestRunSimMinutes: +(longestRun / 60).toFixed(2), restarts, range, samples,
   };
 }
 result.environment.gpu = gpu.renderer;
