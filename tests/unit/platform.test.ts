@@ -174,6 +174,61 @@ describe('AdController', () => {
     vi.useRealTimers();
   });
 
+  it('an ad that starts in time is not cut off by the request timeout while it plays', async () => {
+    vi.useFakeTimers();
+    const pause = new PauseManager();
+    const mute = muteSpy();
+    let started!: () => void;
+    let resolve!: (o: AdOutcome) => void;
+    const ads = new AdController(platformWith((_t, h) => { started = h.onStarted; return new Promise((r) => (resolve = r)); }), pause, mute);
+    ads.timeoutMs = 1000;
+    ads.playTimeoutMs = 10_000;
+    const p = ads.show('rewarded');
+    vi.advanceTimersByTime(800);
+    started();
+    vi.advanceTimersByTime(2000); // well past the request timeout, ad still playing
+    expect(pause.paused).toBe(true);
+    expect(mute.reasons.has('ad')).toBe(true);
+    resolve({ status: 'finished' });
+    const r = await p;
+    expect(r.outcome.status).toBe('finished');
+    expect(r.granted).toBe(true);
+    expect(pause.paused).toBe(false);
+    expect(mute.reasons.has('ad')).toBe(false);
+    vi.useRealTimers();
+  });
+
+  it('a playing ad that never reports an end is released by the playback safety timeout', async () => {
+    vi.useFakeTimers();
+    const pause = new PauseManager();
+    const mute = muteSpy();
+    let started!: () => void;
+    const ads = new AdController(platformWith((_t, h) => { started = h.onStarted; return new Promise(() => {}); }), pause, mute);
+    ads.timeoutMs = 1000;
+    ads.playTimeoutMs = 5000;
+    const p = ads.show('rewarded');
+    started();
+    vi.advanceTimersByTime(5100);
+    const r = await p;
+    expect(r.outcome).toEqual({ status: 'error', code: 'timeout' });
+    expect(r.granted).toBe(false);
+    expect(pause.paused).toBe(false);
+    expect(mute.reasons.has('ad')).toBe(false);
+    vi.useRealTimers();
+  });
+
+  it('records the end time of every ad so midgame pacing also counts rewarded ads', async () => {
+    let t = 1000;
+    const ads = new AdController(platformWith(() => Promise.resolve({ status: 'finished' } as AdOutcome)), new PauseManager(), muteSpy(), () => t);
+    await ads.show('rewarded');
+    expect(ads.lastAdAt).toBe(1000);
+    expect(ads.lastMidgameAt).toBe(-Infinity);
+    t = 5000;
+    await ads.show('midgame');
+    expect(ads.lastAdAt).toBe(5000);
+    expect(ads.lastMidgameAt).toBe(5000);
+  });
+
   it('is a no-op when the build has no ad provider', async () => {
     const pause = new PauseManager();
     const ads = new AdController(new StandalonePlatform('basic', 'x', false), pause, muteSpy());

@@ -14,8 +14,13 @@ export interface MuteTarget {
 export class AdController {
   private seq = 0;
   private active = 0;
+  /** Waiting for an ad to start. */
   timeoutMs = 60_000;
+  /** Safety net once an ad is playing; normally adFinished/adError ends it first. */
+  playTimeoutMs = 180_000;
   lastMidgameAt = -Infinity;
+  /** End time of the most recent ad of any type (midgame pacing counts rewarded ads too). */
+  lastAdAt = -Infinity;
 
   constructor(private platform: PlatformAdapter, private pause: PauseManager, private audio: MuteTarget, private now: () => number = () => performance.now()) {}
 
@@ -36,9 +41,13 @@ export class AdController {
     this.pause.add('ad');
     let started = false;
     let timer: ReturnType<typeof setTimeout> | null = null;
-    const timeout = new Promise<AdOutcome>((res) => {
-      timer = setTimeout(() => res({ status: 'error', code: 'timeout' }), this.timeoutMs);
-    });
+    let expire: (o: AdOutcome) => void = () => {};
+    const timeout = new Promise<AdOutcome>((res) => (expire = res));
+    const arm = (ms: number) => {
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => expire({ status: 'error', code: 'timeout' }), ms);
+    };
+    arm(this.timeoutMs);
     let outcome: AdOutcome;
     try {
       outcome = await Promise.race([
@@ -47,6 +56,7 @@ export class AdController {
             if (this.active !== my) return; // late start after timeout: ignore
             started = true;
             this.audio.addMute('ad');
+            arm(this.playTimeoutMs); // never cut a playing ad short at the request timeout
           },
         }),
         timeout,
@@ -58,7 +68,8 @@ export class AdController {
     if (started) this.audio.removeMute('ad');
     this.pause.remove('ad');
     this.active = 0;
-    if (type === 'midgame') this.lastMidgameAt = this.now();
+    this.lastAdAt = this.now();
+    if (type === 'midgame') this.lastMidgameAt = this.lastAdAt;
     return { requestId, outcome, granted: type === 'rewarded' && outcome.status === 'finished' };
   }
 }

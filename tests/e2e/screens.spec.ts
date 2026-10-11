@@ -3,10 +3,16 @@ import { mkdirSync, writeFileSync, existsSync, readFileSync } from 'node:fs';
 import { baseSave, click, openGame, waitState } from './util';
 
 // CrazyGames-documented sizes (devicePixelRatio 1) + phone portrait/landscape
-const SIZES: [number, number][] = [[907, 510], [1216, 684], [1077, 606], [821, 462], [1366, 768], [1920, 1080], [1536, 864], [1280, 720], [800, 450], [1080, 607]];
-const PHONES: [number, number][] = [[390, 844], [844, 390]];
-const OUT = 'qa/screenshots';
-const REPORT = 'qa/layout-report.json';
+const ALL_SIZES: [number, number][] = [[907, 510], [1216, 684], [1077, 606], [821, 462], [1366, 768], [1920, 1080], [1536, 864], [1280, 720], [800, 450], [1080, 607]];
+const ALL_PHONES: [number, number][] = [[390, 844], [844, 390]];
+// QA_QUALITY=low|medium|high picks the graphics preset (default low); QA_SIZES=WxH,WxH limits the sizes.
+const QUALITY = process.env.QA_QUALITY ?? 'low';
+const only = process.env.QA_SIZES?.split(',').map((x) => x.trim());
+const pick = (l: [number, number][]) => (only ? l.filter(([w, h]) => only.includes(`${w}x${h}`)) : l);
+const SIZES = pick(ALL_SIZES);
+const PHONES = pick(ALL_PHONES);
+const OUT = QUALITY === 'low' ? 'qa/screenshots' : `qa/screenshots-${QUALITY}`;
+const REPORT = QUALITY === 'low' ? 'qa/layout-report.json' : `qa/layout-report-${QUALITY}.json`;
 
 type Issue = { size: string; screen: string; problem: string; el: string };
 
@@ -56,7 +62,7 @@ async function audit(page: import('@playwright/test').Page, frame: import('@play
 
 for (const [w, h] of [...SIZES, ...PHONES]) {
   const size = `${w}x${h}`;
-  test(`screens at ${size}`, async ({ page, browser }) => {
+  test(`screens at ${size} (${QUALITY})`, async ({ page, browser }) => {
     test.setTimeout(480_000);
     mkdirSync(OUT, { recursive: true });
     const issues: Issue[] = [];
@@ -64,7 +70,7 @@ for (const [w, h] of [...SIZES, ...PHONES]) {
     const ctx = phone ? await browser.newContext({ viewport: { width: w, height: h }, hasTouch: true, isMobile: true, deviceScaleFactor: 1 }) : null;
     const pg = ctx ? await ctx.newPage() : page;
     if (!ctx) await pg.setViewportSize({ width: w, height: h });
-    const f = await openGame(pg, undefined, baseSave({ coins: 1234, settings: { quality: 'low' }, campaign: { levels: { h1: { done: true, medals: [true, true, false], bestValue: 42, plays: 1 } } } }));
+    const f = await openGame(pg, undefined, baseSave({ coins: 1234, settings: { quality: QUALITY }, campaign: { levels: { h1: { done: true, medals: [true, true, false], bestValue: 42, plays: 1 } } } }));
     await waitState(f, "s.fsm === 'menu'", 30_000);
     await pg.waitForTimeout(800);
     await audit(pg, f, size, 'menu', issues);

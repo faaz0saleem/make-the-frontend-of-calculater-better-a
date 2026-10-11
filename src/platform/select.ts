@@ -26,7 +26,8 @@ export async function selectPlatform(stage: ReleaseStage, params: URLSearchParam
     await p.init();
     return { platform: p, note: 'dev platform (simulated)' };
   }
-  if (params.get('platform') === 'standalone') {
+  // Test/self-hosting override. Ignored on CrazyGames so the Data module always stays the save there.
+  if (params.get('platform') === 'standalone' && !onCrazyGamesHost()) {
     const p = new StandalonePlatform(stage, 'standalone', true);
     await p.init();
     return { platform: p, note: 'forced standalone' };

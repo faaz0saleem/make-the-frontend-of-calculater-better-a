@@ -1,4 +1,4 @@
-import { writeFileSync } from 'node:fs';
+import { mkdirSync, writeFileSync } from 'node:fs';
 import { test } from 'vitest';
 import { VEHICLES } from '../../src/data/vehicles';
 import { applyUpgrades } from '../../src/data/upgrades';
@@ -30,5 +30,6 @@ test('diag', () => {
       out.push(`n=${n} ${scenario.padEnd(10)} maxRatio=${maxR.toFixed(2)} maxTip=${maxTip.toFixed(2)} lost=${lost} felt=${tr.feltA.toFixed(2)} stab=${tr.stability.toFixed(2)}`);
     }
   }
-  writeFileSync(process.env.OUT!, out.join('\n'));
+  mkdirSync('qa/tmp', { recursive: true });
+  writeFileSync(process.env.OUT ?? 'qa/tmp/diag.txt', out.join('\n'));
 });

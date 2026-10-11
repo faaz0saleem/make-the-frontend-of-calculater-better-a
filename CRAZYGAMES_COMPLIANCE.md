@@ -6,7 +6,7 @@
 
 **Status legend:** `pass` = implemented and validated locally (evidence given) · `fail` · `not applicable` (reason given) · `not verified` = needs the live portal/QA tool, a real device, or a full read of the page.
 
-**Evidence keys:** U = unit tests (`npm test`, 76 passing) · E = Playwright e2e against the production build in a nested-path iframe (`npm run e2e`, 11 passing) · S = screenshot matrix + layout audit (`qa/screenshots`, `qa/layout-report.json`) · B = `npm run budget` (`qa/budget.json`) · C = code reference.
+**Evidence keys:** U = unit tests (`npm test`, UNIT_COUNT passing) · E = Playwright e2e against the production build in a nested-path iframe (`npx playwright test tests/e2e/flows.spec.ts tests/e2e/input.spec.ts`, 11 passing; results in `qa/e2e-flows-results.json`) · S = screenshot matrix + layout audit (`qa/screenshots`, `qa/layout-report.json`) · B = `npm run budget` (`qa/budget.json`) · C = code reference.
 
 ## Sources
 | Id | Page | URL |
@@ -61,13 +61,13 @@
 | Requirement | Implementation | Evidence | Status |
 |---|---|---|---|
 | English | All UI in English. No translations, so no locale switching; `platform.locale()` is wired for future use | C | pass |
-| Gameplay independent of refresh rate | Fixed 120 Hz step, bounded catch-up, interpolation | U `loop.test.ts`, `sim.test.ts › frame-rate independent` | pass |
-| Readable at listed iframe sizes (DPR 1): 907×510, 1216×684, 1077×606, 821×462, 1366×768, 1920×1080, 1536×864, 1280×720, 800×450, 1080×607 | Responsive CSS with clamp() typography and short-height breakpoints | S: 9 screens × 10 sizes + 2 phone sizes, automated overlap/clip audit | pass, with the audit findings noted in QA_REPORT |
+| Gameplay independent of refresh rate | Fixed 120 Hz step, bounded catch-up, interpolation | U `loop.test.ts`; `sim.test.ts › is deterministic and frame-rate independent` (30/60/144 Hz frame timing give identical truck and stack state at step 3,500) | pass |
+| Readable at listed iframe sizes (DPR 1): 907×510, 1216×684, 1077×606, 821×462, 1366×768, 1920×1080, 1536×864, 1280×720, 800×450, 1080×607 | Responsive CSS with clamp() typography and short-height breakpoints | S: 9 screens × 10 sizes + 2 phone sizes, automated overlap/clip audit (0 findings) | pass |
 | Original content; PEGI 12 compliant | Original procedural art and audio; cartoon crashes only | ASSET_LICENSES.md | pass (owner confirms the rating questionnaire) |
 | No custom fullscreen button (platform provides fullscreen) | None | C (search `requestFullscreen`: none) | pass |
 | No cross-promotion, app-store links or promotional outbound links | No links at all in the game UI | C (no `<a href>` in `src/ui`) | pass |
 | Full Launch: new players enter gameplay directly or with at most one click | Fresh save → title over the live 3D scene → one "Tap to drive" click → driving | E `fresh player…` (state `title` → one click → `driving`/gameplay true) | pass |
-| Restricted keys: avoid Escape (closes fullscreen) and browser shortcuts | Pause is P or the on-screen button; Escape and modifier combos are unbound | C `src/input/input.ts` | pass |
+| Restricted keys: avoid Escape (closes fullscreen) and browser shortcuts | Pause is P or the on-screen button. Escape is unbound. Key-downs with Ctrl/Cmd/Alt are ignored and never `preventDefault`-ed, so browser shortcuts keep working | C `src/input/input.ts` `key()` | pass (code) |
 | Support different keyboard layouts | Physical key codes (`KeyA`/`KeyD`) plus arrows, so AZERTY works | C; E keyboard test | pass |
 
 ## D. SDK v3 integration (S8)
@@ -75,15 +75,15 @@
 |---|---|---|---|
 | Load `https://sdk.crazygames.com/crazygames-sdk-v3.js`, then `await window.CrazyGames.SDK.init()` before using modules | Script injected dynamically with a 9 s timeout (deviation from the static `<script>` example; see DECISIONS #15); `init()` awaited before any module use | C `src/platform/crazygames.ts`, `select.ts` | pass (code); real SDK not loadable here → not verified live |
 | No v2 API mixed in | Only the v3 surface is used (`SDK.game.*`, `SDK.data.*`, `SDK.ad.requestAd`, `SDK.user.addAuthListener`) | C | pass |
-| Outside CrazyGames domains the environment is `disabled` and calls throw | `environment === 'disabled'` → standalone adapter (local save, no ads). A failed script load → standalone; memory-only when the host looks like CrazyGames | E `SDK unavailable…` (no blank screen) | pass (local) |
-| Simulated ads only in explicit dev tests | `DevPlatform` exists only in dev builds (`?platform=dev`); it is absent from production (bundle grep) | B grep; C | pass |
+| Outside CrazyGames domains the environment is `disabled` and calls throw | `environment === 'disabled'` → standalone adapter (local save, no ads). A failed script load → standalone; memory-only when the host looks like CrazyGames | C `src/platform/select.ts` `selectPlatform`; E `SDK unavailable…` proves only that a missing SDK never blank-screens | pass (code) |
+| Simulated ads only in explicit dev tests | `DevPlatform` exists only in dev builds (`?platform=dev`, gated by `__DEV_TOOLS__`, false in `vite build`); `npm run budget` checks the production JS contains none of its strings (`no_dev_platform`) | B; C `select.ts`, `vite.config.ts` | pass |
 
 ## E. Lifecycle & audio settings (S9)
 | Requirement | Implementation | Evidence | Status |
 |---|---|---|---|
-| `gameplayStart`/`gameplayStop` paired with real play; not during menus, pause, ad waits or results; no duplicates | `GameplayGate` derives the state from FSM `driving` + no pause reason + run in progress. The adapter de-duplicates too | U `platform.test.ts › gameplayStart/Stop follow real driving only`, `de-duplicates`; E start/stop counts equal | pass |
-| `loadingStart`/`loadingStop` bracket real loading | Called around platform select → save load → renderer/scene setup in `main.ts` | C | pass (code) |
-| Honour `game.settings.muteAudio` at init and via the settings listener; platform mute overrides the user setting | Read at boot → mute reason `platform`; listener toggles it; removed on dispose | U `reads muteAudio…`, `platform mute overrides…` | pass |
+| `gameplayStart`/`gameplayStop` paired with real play; not during menus, pause, ad waits or results; no duplicates | `GameplayGate` derives the state from FSM `driving` + no pause reason + run in progress. The adapter de-duplicates too. Tab-return, refocus and Spare-Tire revive open the pause/countdown before dropping the old reason, so there is no zero-length start/stop blip | U `platform.test.ts › gameplayStart/Stop follow real driving only`, `de-duplicates`; E `fresh player…` (start/stop counts equal), `pause safety…` (no extra `gameplayStart` on tab return or refocus) | pass |
+| `loadingStart`/`loadingStop` bracket real loading | Called right after SDK init, around save load → fonts → renderer/scene setup → first screen (`main.ts`). SDK script loading and `init()` happen before the bracket because the SDK is needed to send it | C `src/main.ts` | pass (code) |
+| Honour `game.settings.muteAudio` at init and via the settings listener; platform mute overrides the user setting | Read at boot → mute reason `platform`; the settings listener toggles it (the game object lives for the whole page, so the listener is never removed) | U `reads muteAudio…` (adapter), `platform mute overrides…` (audio reasons); C `src/game/game.ts` `bindLifecycle` (wiring) | pass |
 | Combine platform, user, tab and ad mute reasons so ending one doesn't cancel another | `AudioManager` mute is a set of reasons | U | pass |
 
 ## F. Saves & accounts (S5, S10)
@@ -92,9 +92,9 @@
 | Data module is the authoritative progress store on CrazyGames (guests and accounts); avoid relying on local saves | `CrazyDataStorage` (key `wobblehaul.save`) when the SDK environment is `crazygames`/`local`. There is no competing localStorage database on the platform | U `uses the Data module as storage`; C `src/progression/storage.ts` | pass (local fake); live not verified |
 | Enable "Progress Save" in the submission flow | Documented in README and SUBMISSION.md | — | not verified (owner action) |
 | Await init and read existing data before defaults | `ProgressStore.init()` awaits `load()` before the game is built | C `src/main.ts` | pass |
-| ≤ 1 MB | Typical save ≈ 3–6 KB; hard guard at 900 KB | U `stays far below the 1 MB` | pass |
+| ≤ 1 MB | New save 0.8 KB; all 30 levels + full album ≈ 3 KB; plus a year of daily scores ≈ 11 KB. Writes above 900 KB are refused and the stored copy is kept | U `stays far below the 1 MB…`, `a fully progressed save is still tiny`, `refuses to write a save above the size guard…` | pass |
 | Errors handled honestly; never overwrite account data with defaults | Read failure → memory-only + notice; future-version save → read-only; corrupt → backed up | U `a failed initial read never overwrites…`, `newer build…`, `corrupt JSON…` | pass |
-| Schema versions and tested migrations | v2 schema with v1→v2 migration and a sanitiser | U `migrates a v1 save…`, `sanitises malformed values…` | pass |
+| Schema versions and tested migrations | v2 schema with a v1→v2 migration (v1 is an unreleased legacy layout that keeps the migration path real and tested) and a sanitiser | U `migrates a v1 save…`, `sanitises malformed values…` | pass |
 | Account change: reload the right save, never merge currencies | `onAuthChange` → abandon run (unsettled) → `store.reload()` | U `account change reloads…` | pass (logic); live guest→account sync not verified |
 | Guest play allowed; no external login or automatic login prompts | No login UI at all | C | pass |
 | Full Launch: progress linked to the CrazyGames account (via Data module); username/avatar where applicable | Progress via Data module. The game shows no player identity, so username/avatar display doesn't apply | — | pass / not verified live |
@@ -103,9 +103,9 @@
 | Requirement | Implementation | Evidence | Status |
 |---|---|---|---|
 | Only CrazyGames SDK ads | No other ad code | C | pass |
-| Basic: no ads or ineffective ad buttons | No ad UI unless `stage === 'full'` and the SDK reports ads available | U; S (Basic build) | pass |
+| Basic: no ads or ineffective ad buttons | No ad UI unless `stage === 'full'` and the SDK environment is `crazygames`/`local` | U `Basic Launch build never requests ads`; E `campaign…` (no ad offer on the crash screen) and `garage…` (no paint-trial button); C `crazygames.ts` `adsAvailable` | pass |
 | Game runs properly with ads disabled / adblock / no fill | Every ad path resolves to an outcome; errors fall back to normal flow | U `AdController` tests | pass |
-| Never interrupt active play, chain ads, or show midgame ads from navigation | Midgame only on Retry/Next at a results screen, ≥ 3 min into the session, never in the same break as a rewarded offer | C `Game.maybeMidgame` | pass (code); live not verified |
+| Never interrupt active play, chain ads, or show midgame ads from navigation | Midgame only on Retry/Next at a results screen, ≥ 3 min into the session, never in the same break as a rewarded offer, and never within 3 min of any other ad (including a Garage paint trial) | C `Game.maybeMidgame`; U `records the end time of every ad…` | pass (code); live not verified |
 | Rewarded: explicit consent, clear labels, equal-weight no-ad option; not too often | The crash-screen offer appears at most every 3rd crash, only with 0 Spare Tires, never in Daily. Equal-size "No thanks". Paint trial is opt-in in the Garage. Everything is also obtainable with coins | C `src/ui/screens.ts` crashed(), `src/ui/garage.ts` | pass (code); Full build UI not screenshot-audited |
 | Reward only on success, never on error; idempotent | `granted` only when `status === 'finished'`; `grantAdReward(requestId)` is single-use | U `never grants…`, `duplicate reward grant…` | pass |
 | No levels that require ads | Ads never gate progress; retries are free | — | pass |
@@ -114,9 +114,9 @@
 ## H. Ad lifecycle (S11)
 | Requirement | Implementation | Evidence | Status |
 |---|---|---|---|
-| Pause when requesting; mute when the ad actually starts (`adStarted`); release on finish/error | Pause reason `ad` on request; mute reason `ad` in `onStarted`; both removed afterwards, leaving other reasons intact | U `pauses while requested, mutes only after…` | pass |
+| Pause when requesting; mute when the ad actually starts (`adStarted`); release on finish/error | Pause reason `ad` on request; mute reason `ad` in `onStarted`; both removed when the SDK reports the end, leaving other reasons intact. Once an ad has started, the request timeout no longer applies (a 3-minute safety net replaces it) | U `pauses while requested, mutes only after…`, `an ad that starts in time is not cut off…`, `a playing ad that never reports an end…` | pass |
 | Handle `adsDisabledBasicLaunch`, `unfilled`, `adblock`, `adCooldown`, others | All map to `{status:'error', code}`; no reward; flow continues | U `maps adFinished / adError…` | pass |
-| No stranded spinner; prevent overlapping requests; late/duplicate callbacks | 60 s timeout; `busy` guard; adapter ignores callbacks after the first resolution; late `adStarted` ignored | U `times out…`, `rejects overlapping…`, `ignores duplicate or late callbacks` | pass |
+| No stranded spinner; prevent overlapping requests; late/duplicate callbacks | 60 s timeout for an ad that never starts; `busy` guard; adapter ignores callbacks after the first resolution; an `adStarted` after that timeout is ignored | U `times out…`, `rejects overlapping…`, `ignores duplicate or late callbacks` | pass |
 
 ## I. Placement for this game (S4, S17)
 | Item | Implementation | Status |

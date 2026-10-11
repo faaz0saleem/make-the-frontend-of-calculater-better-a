@@ -3,7 +3,7 @@
 // SwiftShader (software GL) container they say nothing about frame rate on real GPUs.
 //   node scripts/perf.mjs boot            boot-to-menu timing (3 cold loads)
 //   node scripts/perf.mjs fps             per-preset FPS / draw calls / triangles during Long Haul
-//   node scripts/perf.mjs soak <minutes>  real-time Long Haul soak at 4x sim speed; resource counters over time
+//   node scripts/perf.mjs soak <minutes>  real-time Long Haul soak at 4x sim speed (default 8 min); resource counters over time
 import { chromium } from '@playwright/test';
 import { spawn } from 'node:child_process';
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
@@ -118,15 +118,18 @@ if (mode === 'boot') {
   }
   result.fps = { note: 'Long Haul with the scripted driver, 20 s sample after 5 s warm-up. Software GL: FPS is not representative of player hardware; draw calls / triangles are.', presets };
 } else if (mode === 'soak') {
-  const minutes = Number(process.argv[3] ?? 5);
+  const minutes = Number(process.argv[3] ?? 8);
   const { ctx, frame } = await open('low');
   await startEndless(frame, 4);
   await installSampler(frame);
   const samples = [];
   let restarts = 0;
-  const end = Date.now() + minutes * 60000;
+  let simDone = 0; // simulated seconds of runs that already ended
+  let longestRun = 0;
+  const t0 = Date.now();
+  const end = t0 + minutes * 60000;
   while (Date.now() < end) {
-    await frame.waitForTimeout(20000);
+    await frame.waitForTimeout(15000);
     const st = await frame.evaluate(() => {
       const g = window.__wh.game;
       const run = g.run;
@@ -134,20 +137,36 @@ if (mode === 'boot') {
       let sceneObjects = 0;
       g.renderer.scene.traverse(() => sceneObjects++);
       return {
-        fsm: g.fsm.state, runState: run?.state ?? null, simSeconds: run ? +run.t.toFixed(1) : null, distance: run ? Math.round(run.distance) : null,
-        features: run?.track.features.length ?? null, segments: run?.track.segments?.length ?? null, chunkViews: world.chunks.size, sceneObjects,
+        fsm: g.fsm.state, runState: run?.state ?? null, simSeconds: run ? +run.t.toFixed(1) : 0, distance: run ? Math.round(run.distance) : null,
+        features: run?.track.features.length ?? null, segments: run?.track.segments?.length ?? null,
+        chunkViews: world.chunks.size, chunkObjects: world.stats().objects, sceneObjects,
+        particles: g.renderer.particles.active(), debris: g.renderer.truck.activeDebris(),
+        runListeners: run?.events.listenerCount() ?? null, inputListeners: g.input.listenerCount,
       };
     });
     const perf = await readSampler(frame);
-    samples.push({ atRealS: Math.round((Date.now() - (end - minutes * 60000)) / 1000), restarts, ...st, ...perf });
+    longestRun = Math.max(longestRun, st.simSeconds);
+    const totalSim = simDone + st.simSeconds;
+    samples.push({ atRealS: Math.round((Date.now() - t0) / 1000), totalSimMin: +(totalSim / 60).toFixed(2), restarts, ...st, ...perf });
     console.log(JSON.stringify(samples[samples.length - 1]));
     if (st.runState !== 'running') {
+      simDone += st.simSeconds;
       restarts++;
       await startEndless(frame, 4);
     }
   }
   await ctx.close();
-  result.soak = { note: `Real-time soak of ${minutes} min with the simulation at 4x (Low preset). A crash starts a fresh Long Haul run (counted as restarts) so run setup/teardown is also exercised.`, samples };
+  const last = samples[samples.length - 1];
+  const totalSimMin = last ? last.totalSimMin : 0;
+  const keys = ['features', 'segments', 'chunkViews', 'chunkObjects', 'sceneObjects', 'geometries', 'textures', 'programs', 'heapMB', 'runListeners', 'inputListeners'];
+  const range = Object.fromEntries(keys.map((k) => {
+    const v = samples.map((x) => x[k]).filter((x) => typeof x === 'number');
+    return [k, v.length ? [Math.min(...v), Math.max(...v)] : null];
+  }));
+  result.soak = {
+    note: `Real-time soak of ${minutes} min with the simulation at 4x (Low preset), driven by the scripted driver. A crash starts a fresh Long Haul run (counted as restarts), so run setup and teardown are exercised too.`,
+    realMinutes: minutes, totalSimMinutes: totalSimMin, longestRunSimMinutes: +(longestRun / 60).toFixed(2), restarts, range, samples,
+  };
 }
 result.environment.gpu = gpu.renderer;
 mkdirSync('qa', { recursive: true });

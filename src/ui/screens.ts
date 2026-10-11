@@ -53,6 +53,7 @@ export class UiRoot implements UiBridge {
   }
 
   devOverlay(text: string): void {
+    if (!__DEV_TOOLS__) return; // compiled out of production builds
     if (!this.devEl) {
       this.devEl = h('div', { class: 'dev-overlay', 'data-testid': 'dev-overlay' });
       this.root.append(this.devEl);

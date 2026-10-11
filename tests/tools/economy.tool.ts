@@ -1,5 +1,5 @@
 import { test } from 'vitest';
-import { writeFileSync } from 'node:fs';
+import { mkdirSync, writeFileSync } from 'node:fs';
 import { LEVELS } from '../../src/data/levels';
 import { buildLevel, levelSpeedAt } from '../../src/modes/campaign';
 import { RunSession } from '../../src/sim/run';
@@ -36,5 +36,6 @@ test('economy sample', () => {
     const r = computeRewards(sum, null, 0, false);
     out.push(`endless-${seed},${run.state},${run.t.toFixed(0)},banked ${run.stats.banked},${run.stats.coins},${r.total},dist ${Math.round(run.distance)}`);
   }
-  writeFileSync(process.env.OUT!, out.join('\n'));
+  mkdirSync('qa/tmp', { recursive: true });
+  writeFileSync(process.env.OUT ?? 'qa/tmp/economy.txt', out.join('\n'));
 });

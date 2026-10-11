@@ -1,4 +1,4 @@
-import { writeFileSync } from 'node:fs';
+import { mkdirSync, writeFileSync } from 'node:fs';
 import { test } from 'vitest';
 import { LEVELS } from '../../src/data/levels';
 import { VEHICLES } from '../../src/data/vehicles';
@@ -26,5 +26,6 @@ test('explore', () => {
     const m = evaluateMedals(lv, run.stats, run.state === 'finished');
     rows.push(`${lv.id.padEnd(4)} ${run.state.padEnd(8)} ${String(run.crashReason ?? '').padEnd(9)} t=${run.t.toFixed(1).padStart(5)} len=${built.finishS!.toFixed(0)} coll=${run.stats.collected} del=${run.stats.delivered.length} val=${m.deliveredValue}/${lv.objectives.target} spill=${run.stats.spilled} shed=${run.stats.sheds} coins=${run.stats.coins} nm=${run.stats.nearMisses} rec=${run.stats.recoveries} minStab=${minStab.toFixed(2)} medals=${+m.delivery}${+m.route}${+m.care} [${spills.join(',')}]`);
   }
-  writeFileSync(process.env.OUT ?? '/tmp/explore.txt', rows.join('\n'));
+  mkdirSync('qa/tmp', { recursive: true });
+  writeFileSync(process.env.OUT ?? 'qa/tmp/explore.txt', rows.join('\n'));
 }, 120000);

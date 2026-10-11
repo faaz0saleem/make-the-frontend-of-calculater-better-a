@@ -36,15 +36,15 @@ describe('campaign levels', () => {
     }
   });
 
-  it('typical levels take 60–90 s at their speed (intro shorter)', () => {
+  it('levels take 60–90 s at their speed (the tutorial is deliberately shorter)', () => {
     for (const l of LEVELS) {
       const b = buildLevel(l);
       const v = (l.speed[0] + l.speed[1]) / 2;
       const t = b.finishS! / v;
       if (l.tutorial) expect(t).toBeGreaterThan(25);
       else {
-        expect(t, l.id).toBeGreaterThan(55);
-        expect(t, l.id).toBeLessThan(95);
+        expect(t, l.id).toBeGreaterThanOrEqual(60);
+        expect(t, l.id).toBeLessThanOrEqual(90);
       }
     }
   });
@@ -81,7 +81,7 @@ describe('campaign levels', () => {
         expect(m.deliveredValue, l.id).toBeGreaterThan(0);
       }
     }
-    // The bot is a deliberately naive driver; allow at most one failure and report it.
-    expect(failures.length, failures.join(',')).toBeLessThanOrEqual(1);
+    // The bot is a deliberately naive driver, but every level must still be completable by it.
+    expect(failures, failures.join(',')).toEqual([]);
   }, 120000);
 });

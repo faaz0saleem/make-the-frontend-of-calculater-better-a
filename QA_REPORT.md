@@ -16,42 +16,42 @@ Everything below was run in this repository's cloud container on 2026-10-10. Raw
 | Check | Command | Result |
 |---|---|---|
 | Typecheck | `npm run typecheck` | pass (0 errors) |
-| Unit tests | `npm test` | **76 / 76 pass** (7 files, ~15 s) |
-| E2E flows + input | `npm run build && npm run e2e` (flows + input specs) | **11 / 11 pass** — see `qa/e2e-results.json` |
-| Screenshot matrix + layout audit | `npx playwright test tests/e2e/screens.spec.ts` | **12 / 12 sizes pass**, 108 screenshots, **0 layout findings** (`qa/layout-report.json` is `[]`) |
+| Unit tests | `npm test` | **UNIT_COUNT / UNIT_COUNT pass** (7 files) |
+| E2E flows + input | `npm run build && E2E_JSON=qa/e2e-flows-results.json npx playwright test tests/e2e/flows.spec.ts tests/e2e/input.spec.ts` | E2E_RESULT — see `qa/e2e-flows-results.json` |
+| Screenshot matrix + layout audit | `npx playwright test tests/e2e/screens.spec.ts` | MATRIX_RESULT |
 | Bundle budget | `npm run budget` | all checks pass — see "Bundle" |
 | Upload ZIP | `npm run package` | `release/wobble-haul-basic.zip`, `index.html` at the root |
 | Boot timing | `node scripts/perf.mjs boot` | 1.3–2.1 s to the interactive menu (local server) |
 | Per-preset render cost | `node scripts/perf.mjs fps` | see "Performance" |
-| Browser soak | `node scripts/perf.mjs soak 6` | see "Soak" |
+| Browser soak | `node scripts/perf.mjs soak 8` | see "Soak" |
 
 ## Unit tests (Vitest, `tests/unit`)
 | File | Tests | What it proves |
 |---|---|---|
 | `loop.test.ts` | 7 | Same number of fixed steps at 30/60/144 Hz; bounded catch-up after a stall; no stepping while stopped; interpolation alpha in [0,1); pause reasons only resume when all are cleared; FSM rejects illegal transitions |
-| `sim.test.ts` | 19 | Stack at rest stays put; taller stack wobbles more; top item most exposed; wind affects light/tall cargo more; heavy items squash fragile ones; van walls lock the bottom item; flatbed uses two columns; **deterministic and frame-rate independent with scripted input**; coins/cargo pickup; head-on vs glancing collisions; beams knock exactly the items above clearance; beam below cab = crash; shed; ramp clears a chasm; drop edge = fall; depot banking and multiplier; revive; tall heavy stack in a tight fast corner rolls over |
-| `levels.test.ts` | 6 | 30 levels (10 per world) reference real chunks/cargo; typical length 60–90 s; targets ≤ ~60 % of the best 8 items; **a crash-free route exists for every truck across each level's speed range**; the scripted driver completes all 30 levels with the starter truck |
-| `endless.test.ts` | 6 | Speed envelope; **every generated sequence keeps a crash-free route (40 seeds × max difficulty × slowest/widest trucks)**; no immediate repeats, depots on schedule; 30 km drive recycles track and rebases with bounded memory; **scripted 20-minute Long Haul run stays bounded (features < 260, segments < 60, 0 leaked listeners)**; daily routes deterministic per date |
-| `progression.test.ts` | 21 | Purchases never go negative; double-clicks cannot double-charge; upgrades need the expected tier; unknown/unowned items rejected; Spare Tires capped, stale-guarded, never in Daily; cosmetics never change handling; first purchase reachable in 2–3 runs; **run settlement applies once per runId (re-entry and reload safe)**; crash forfeits only unbanked cargo; medals never lost; daily bonus once per UTC date and rejects clock rollback; save round-trip ≪ 1 MB; v1 → v2 migration; sanitiser; corrupt JSON backed up; **failed initial read never overwrites the stored save**; newer-version save left untouched; account change reloads instead of merging; save failures retried |
-| `platform.test.ts` | 13 | Loading/gameplay events de-duplicated; `gameplayStart/Stop` only during real driving; platform mute overrides volume; Data module used as storage; **Basic build never requests ads**; adFinished/adError mapping, duplicate/late callbacks ignored; SDK that throws resolves to an error; pause/mute reasons around ads; no reward on error, overlapping requests rejected; timeout instead of a stuck player; duplicate reward for the same request id ignored |
+| `sim.test.ts` | 19 | Stack at rest stays put; taller stack wobbles more; top item most exposed; wind affects light/tall cargo more; heavy items squash fragile ones; van walls lock the bottom item; flatbed uses two columns; **deterministic and frame-rate independent with scripted input** (30, 60 and 144 Hz frame timing give identical truck and per-item stack state at step 3,500, equal to a direct fixed-step replay); coins/cargo pickup; head-on vs glancing collisions; beams knock exactly the items above clearance; beam below cab = crash; shed; ramp clears a chasm; drop edge = fall; depot banking and multiplier; revive; tall heavy stack in a tight fast corner rolls over |
+| `levels.test.ts` | 6 | 30 levels (10 per world) reference real chunks/cargo; every non-tutorial level is 60–90 s at its average speed (measured 61–82 s; the tutorial is 36 s by design); targets ≤ ~60 % of the best 8 items; **a crash-free route exists for every truck across each level's speed range**; the scripted driver completes all 30 levels with the starter truck (zero failures required) |
+| `endless.test.ts` | 6 | Speed envelope; **every generated sequence keeps a crash-free route (40 seeds × max difficulty × slowest/widest trucks)**; no immediate repeats, depots on schedule; 30 km drive recycles track and rebases with bounded memory; **scripted 20-minute Long Haul run (simulation only, no renderer) stays bounded (features < 260, segments < 60)**; daily routes deterministic per date |
+| `progression.test.ts` | 23 | Purchases never go negative; double-clicks cannot double-charge; upgrades need the expected tier; unknown/unowned items rejected; Spare Tires capped, stale-guarded, never in Daily; cosmetics never change handling; the cheapest first purchase costs 250–450 coins (≈ 2–3 runs at an assumed ~150 coins per run); **run settlement applies once per runId (re-entry and reload safe)**; crash forfeits only unbanked cargo; medals never lost; daily bonus once per UTC date and rejects clock rollback; save round-trip ≪ 1 MB; a fully progressed save (all levels, album, a year of daily scores) < 20 KB; writes above the 900 KB guard are refused and the stored copy kept; v1 → v2 migration; sanitiser; corrupt JSON backed up; **failed initial read never overwrites the stored save**; newer-version save left untouched; account change reloads instead of merging; save failures retried |
+| `platform.test.ts` | 16 | Loading/gameplay events de-duplicated; `gameplayStart/Stop` only during real driving; platform mute overrides volume; Data module used as storage; **Basic build never requests ads**; adFinished/adError mapping, duplicate/late callbacks ignored; SDK that throws resolves to an error; pause/mute reasons around ads; no reward on error, overlapping requests rejected; timeout instead of a stuck player; an ad that has started is not cut off by the request timeout, and a playing ad that never reports an end is released by a safety timeout; every ad's end time is recorded for midgame pacing; duplicate reward for the same request id ignored |
 | `data.test.ts` | 4 | Catalogue sizes and unique ids; prices/costs valid and rising; cargo values sane; trucks have distinct profiles |
 
 ## E2E (Playwright, production build, nested-path iframe)
-Flows use the query-gated QA hooks (`?qa=1`) to read state and, where a whole level must be driven, to run the scripted driver at an accelerated simulation rate (SwiftShader renders at only a few frames per second). The input tests use real Playwright keyboard, mouse and touch events.
+Flows use the query-gated test hooks (`?qa=1`) to read state, to force a crash or finish through `__wh.game` where a test needs one, and, where a whole level must be driven, to run the scripted driver at an accelerated simulation rate (SwiftShader renders at only a few frames per second). Keyboard and mouse tests use real Playwright input. The touch drag is synthesized `PointerEvent`s in a touch-enabled mobile context; the SHED tap is a real Playwright tap.
 
 | Test | Covers |
 |---|---|
 | fresh player: one gesture into the tutorial delivery, then menus | First launch shows only a "tap to drive" title; one click starts the tutorial; no `gameplayStart` before that; tutorial completes; start/stop pairs match; reload restores coins |
-| campaign: crash, results, retry, then a successful delivery unlocks the next level | Crash → results → retry → success → next level unlocked |
-| world unlock and medal replay requirements are shown | Locked world messaging and medal requirements |
+| campaign: crash, results, retry, then a successful delivery unlocks the next level | Crash → results → retry → success → next level unlocked; no ad offer on the crash screen (Basic build) |
+| world unlock and medal replay requirements are shown | World 2 opens after Harbor 10; the briefing shows earned medals and their requirements |
 | Long Haul: banking at depots, then a crash forfeits only unbanked cargo | Bank-or-carry rule end to end |
 | Daily Contract: completion bonus once, replays still record scores | One-time bonus, replays recorded |
-| garage: buy (two-step confirm), equip, upgrade, reload and drive with it | Atomic purchase UI, persistence across reload, equipped truck used in the run |
-| pause safety: hidden tab and focus loss pause, resume needs intent plus countdown | `visibilitychange` and `blur` pause and mute; resuming needs a click plus a countdown |
-| SDK unavailable: default URL still boots to a playable title | No blank screen when the SDK cannot load |
-| keyboard steering, Space shed, P pause | A/D/arrows, Space, P (no Escape) |
+| garage: buy (two-step confirm), equip, upgrade, reload and drive with it | Atomic purchase UI, persistence across reload, equipped truck used in the run; no paint-trial ad button (Basic build) |
+| pause safety: hidden tab and focus loss pause, resume needs intent plus countdown | A hidden tab pauses and mutes; window blur pauses; returning opens the pause menu without any extra `gameplayStart`; resuming needs a click plus a countdown |
+| SDK unavailable: default URL still boots to a playable title (no blank screen) | No blank screen when the SDK cannot load |
+| keyboard steering, Space shed, P pause | ArrowRight and A steer, Space sheds, P pauses |
 | mouse drag steers; releasing stops steering | Pointer drag |
-| touch: horizontal drag steers and the SHED button works | Touch context (`hasTouch`, `isMobile`) |
+| touch › horizontal touch drag steers and the SHED button works | Touch-enabled mobile context (`hasTouch`, `isMobile`) |
 
 ## Screenshot matrix (`qa/screenshots/<size>-<screen>.png`)
 Sizes: the ten CrazyGames reference sizes 907×510, 1216×684, 1077×606, 821×462, 1366×768, 1920×1080, 1536×864, 1280×720, 800×450, 1080×607, plus phone portrait 390×844 and phone landscape 844×390 (touch, mobile). Screens per size: menu, levels, briefing, HUD (mid-run with cargo), pause, results, garage, garage-upgrades, settings. All captured at the **Low** preset (the most constrained case).

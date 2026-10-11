@@ -101,7 +101,10 @@ export function defaultSave(now = 0): SaveData {
 }
 
 // ------------------------------------------------------------------ migrations
-/** v1 was the prototype schema (flat). Kept so older saves keep their progress. */
+/**
+ * v1 is a flat legacy layout that was never released. It exists so the migration path is real
+ * code with a test from day one; future schema bumps add MIGRATIONS[2], [3], ...
+ */
 interface SaveV1 {
   version: 1;
   coins?: number;

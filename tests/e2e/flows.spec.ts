@@ -41,6 +41,8 @@ test.describe('production build in a nested-path iframe', () => {
     await f.evaluate(() => (window as unknown as { __wh: { game: { run: { crash(r: string): void } } } }).__wh.game.run.crash('barrier'));
     await expect(f.locator('[data-testid=screen-crash]')).toBeVisible();
     expect((await state(f)).gameplay).toBe(false);
+    // Basic Launch build: no rewarded-ad offer on the crash screen
+    await expect(f.locator('[data-testid=btn-ad-continue]')).toHaveCount(0);
     await click(f, 'btn-see-results');
     await expect(f.locator('[data-testid=screen-results]')).toContainText('Crashed');
     expect((await state(f)).fsm).toBe('results');
@@ -129,6 +131,8 @@ test.describe('production build in a nested-path iframe', () => {
     await click(f, 'gtab-paint');
     await click(f, 'paint-gold');
     await expect(f.locator('[data-testid=btn-buy]')).toContainText('Not enough coins');
+    // Basic Launch build: no rewarded paint trial
+    await expect(f.locator('[data-testid=btn-trial]')).toHaveCount(0);
     await page.reload();
     const f2 = (await (await page.waitForSelector('#game-frame')).contentFrame())!;
     await f2.waitForFunction(() => (window as unknown as { __wh?: unknown }).__wh !== undefined);
@@ -145,6 +149,8 @@ test.describe('production build in a nested-path iframe', () => {
     const f = await openGame(page, undefined, baseSave());
     await click(f, 'mode-endless');
     await waitState(f, "s.gameplay");
+    const starts = async () => (await state(f)).sdk.filter((e: string) => e === 'gameplayStart').length;
+    const n0 = await starts();
     await f.evaluate(() => {
       Object.defineProperty(document, 'hidden', { value: true, configurable: true });
       document.dispatchEvent(new Event('visibilitychange'));
@@ -161,15 +167,18 @@ test.describe('production build in a nested-path iframe', () => {
     expect(s.fsm).toBe('paused');
     expect(s.pause).toEqual(['user']);
     expect(s.mute).not.toContain('hidden');
+    expect(await starts()).toBe(n0); // returning to the tab never blips gameplayStart
     await click(f, 'btn-resume');
     s = await state(f);
     expect(s.pause).toContain('countdown');
     expect(s.gameplay).toBe(false);
     await waitState(f, 's.gameplay === true', 20_000);
+    expect(await starts()).toBe(n0 + 1);
     await f.evaluate(() => window.dispatchEvent(new Event('blur')));
     expect((await state(f)).gameplay).toBe(false);
     await f.evaluate(() => window.dispatchEvent(new Event('focus')));
     expect((await state(f)).fsm).toBe('paused');
+    expect(await starts()).toBe(n0 + 1); // refocusing never blips gameplayStart either
   });
 
   test('SDK unavailable: default URL still boots to a playable title (no blank screen)', async ({ page }) => {

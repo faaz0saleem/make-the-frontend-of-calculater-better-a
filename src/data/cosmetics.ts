@@ -1,4 +1,4 @@
-/** Cosmetics are purely visual. They never touch handling (see tests/unit/shop.test.ts). */
+/** Cosmetics are purely visual. They never touch handling (see tests/unit/progression.test.ts). */
 export type PaintPattern = 'solid' | 'twoTone' | 'stripe' | 'dots' | 'checker' | 'flames';
 
 export interface PaintDef {

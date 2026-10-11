@@ -1,4 +1,4 @@
-import { writeFileSync } from 'node:fs';
+import { mkdirSync, writeFileSync } from 'node:fs';
 import { test } from 'vitest';
 import { LEVELS } from '../../src/data/levels';
 import { CARGO } from '../../src/data/cargo';
@@ -12,5 +12,6 @@ test('pot', () => {
     const coins = b.track.features.filter((f) => f.kind === 'coin').length;
     out.push(`${lv.id} T=${Math.round(top8*0.6/5)*5} pickups=${vals.length} top8=${top8} target=${lv.objectives.target} ratio=${(lv.objectives.target / top8).toFixed(2)} coins=${coins}`);
   }
-  writeFileSync(process.env.OUT!, out.join('\n'));
+  mkdirSync('qa/tmp', { recursive: true });
+  writeFileSync(process.env.OUT ?? 'qa/tmp/potential.txt', out.join('\n'));
 });

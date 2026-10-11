@@ -20,7 +20,15 @@ export class Input {
   private pointerSteer = 0;
   private shedLatch = false;
   private pauseLatch = false;
-  enabled = false;
+  private active = false;
+  /** True only while the player is actually driving; turning it off drops any queued shed/pause. */
+  get enabled(): boolean {
+    return this.active;
+  }
+  set enabled(on: boolean) {
+    this.active = on;
+    if (!on) this.shedLatch = this.pauseLatch = false;
+  }
   lastDevice: 'keyboard' | 'mouse' | 'touch' = 'keyboard';
   settings: InputSettings = { sensitivity: 1, deadZonePx: 6 };
   private listeners: [EventTarget, string, EventListener, AddEventListenerOptions | boolean][] = [];
@@ -61,6 +69,8 @@ export class Input {
     const c = e.code;
     const isGameKey = c === 'ArrowLeft' || c === 'ArrowRight' || c === 'KeyA' || c === 'KeyD' || c === 'Space' || c === 'KeyP';
     if (!isGameKey) return;
+    // Leave browser/OS shortcuts (Ctrl/Cmd/Alt + key) alone. Key-ups always count so steering never sticks.
+    if (down && (e.ctrlKey || e.metaKey || e.altKey)) return;
     // Don't steal keys from form controls (settings sliders etc.).
     const tag = (e.target as HTMLElement | null)?.tagName;
     if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') return;
@@ -69,7 +79,7 @@ export class Input {
     if (c === 'ArrowRight' || c === 'KeyD') this.right = down;
     if (down && !e.repeat) {
       if (c === 'Space' && this.enabled) this.shedLatch = true;
-      if (c === 'KeyP') this.pauseLatch = true;
+      if (c === 'KeyP' && this.enabled) this.pauseLatch = true;
       this.onAnyInput?.();
     }
     if (down) this.lastDevice = 'keyboard';

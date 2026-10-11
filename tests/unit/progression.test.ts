@@ -171,6 +171,32 @@ describe('save data', () => {
     expect(byteSize(raw)).toBeLessThan(SAVE_MAX_BYTES / 50);
   });
 
+  it('a fully progressed save is still tiny', async () => {
+    const { LEVELS } = await import('../../src/data/levels');
+    const { CARGO } = await import('../../src/data/cargo');
+    const d = defaultSave(1);
+    for (const l of LEVELS) d.campaign.levels[l.id] = { done: true, medals: [true, true, true], bestValue: 999, plays: 99 };
+    for (let i = 0; i < 365; i++) d.daily.best[`2026-${String(1 + (i % 12)).padStart(2, '0')}-${String(1 + (i % 28)).padStart(2, '0')}#${i}`] = 99999;
+    d.album = Object.keys(CARGO) as typeof d.album;
+    const bytes = byteSize(serialize(d));
+    // a year of daily scores plus every level and album entry stays far below the 900 KB guard
+    expect(bytes).toBeLessThan(20_000);
+  });
+
+  it('refuses to write a save above the size guard and keeps the stored copy', async () => {
+    const mem = new MemoryStorage();
+    const st = new ProgressStore(mem, () => 1);
+    await st.init();
+    await st.flush();
+    const before = mem.raw;
+    const savesBefore = mem.saves;
+    for (let i = 0; i < 80_000; i++) st.data.daily.best[`k${i}`] = 1234567;
+    await st.flush();
+    expect(st.health).toBe('tooLarge');
+    expect(mem.saves).toBe(savesBefore);
+    expect(mem.raw).toBe(before);
+  });
+
   it('migrates a v1 save without losing coins, trucks or medals', () => {
     const v1 = JSON.stringify({ version: 1, coins: 777, trucks: ['van', 'bogus'], truck: 'van', levels: { h1: 3, h2: 1, nope: 2 }, settings: { music: 0.2 } });
     const p = parseSave(v1, 5);

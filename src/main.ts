@@ -1,7 +1,7 @@
 import './ui/base.css';
 import './ui/styles.css';
 import { Game } from './game/game';
-import { selectPlatform } from './platform/select';
+import { onCrazyGamesHost, selectPlatform } from './platform/select';
 import { ProgressStore } from './progression/store';
 import { UiRoot } from './ui/screens';
 import { Autopilot } from './sim/autopilot';
@@ -67,8 +67,9 @@ async function boot(): Promise<void> {
       if (on) ui.devOverlay(`${game.devText()}\n${note}`);
     }, 250);
   }
-  // Query-gated QA hooks for automated browser tests (read-mostly; no reward grants).
-  if (params.get('qa') === '1' || __DEV_TOOLS__) {
+  // Query-gated hooks for automated browser tests of the production build. They expose the Game
+  // object (tests force crashes/finishes through it), so they are never enabled on CrazyGames hosts.
+  if (__DEV_TOOLS__ || (params.get('qa') === '1' && !onCrazyGamesHost())) {
     (window as unknown as Record<string, unknown>).__wh = {
       game,
       state: () => ({

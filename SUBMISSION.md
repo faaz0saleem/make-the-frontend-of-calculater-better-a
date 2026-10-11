@@ -31,7 +31,7 @@ No timers, no energy, no paywalls. Every coin is earned by driving.
 Escape is not used. On AZERTY keyboards the physical A/D keys (labelled Q/D) work, and so do the arrow keys.
 
 ## Supported devices & orientation
-- Desktop: Chrome, Edge, Firefox; Safari must be validated by the owner (see QA_REPORT.md). Landscape.
+- Desktop: tested in Chromium (Chrome engine) only. Edge, Firefox and Safari must be checked by the owner before claiming support (see QA_REPORT.md). Landscape.
 - Mobile/tablet: touch controls; works in landscape and portrait. Declare **both** orientations in the portal (portrait gets a wider camera FOV and a stacked layout). The game does not force an orientation lock.
 - Performance presets: Auto / Low / Medium / High, plus a resolution scale. Low keeps the art direction and drops shadows, bloom and scenery density.
 
@@ -55,4 +55,9 @@ Cartoon vehicles and household cargo. No violence beyond toy-like crashes (cargo
 - The game stores progress only through the CrazyGames Data module, or local storage when self-hosted. It collects no personal data and contains no analytics or tracking.
 
 ## Media
-See `media/README.md` for covers (1920×1080, 800×1200, 800×800) and preview videos (16:9 and 2:3).
+See `media/README.md` for covers (1920×1080, 800×1200, 800×800) and preview videos (16:9 and 2:3). The covers in `media/` are rendered by the game itself and are ready to upload.
+
+If you replace a cover with AI-generated or hand-made art:
+- keep it faithful to how the game actually looks (red pickup, tall cargo tower, pastel harbour town, low-poly toy style), with the title as the only text;
+- export at exactly 1920×1080, 800×1200 and 800×800;
+- record its origin in `ASSET_LICENSES.md` (tool, date, who made it) and check the tool's terms for commercial use.

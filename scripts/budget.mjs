@@ -16,9 +16,10 @@ const walk = (d) => {
 };
 walk(dir);
 const total = files.reduce((a, f) => a + f.bytes, 0);
-// Initial download: everything the page loads before gameplay (all JS/CSS + the woff2 fonts the CSS
-// references; the .woff fallbacks are only fetched by browsers without woff2 support).
-const initial = files.filter((f) => !f.path.endsWith('.woff')).reduce((a, f) => a + f.bytes, 0);
+// Initial download: everything the page loads before gameplay (index.html, all JS/CSS + the woff2
+// fonts the CSS references). The .woff fallbacks are only fetched by browsers without woff2 support,
+// and licenses/ holds notice texts the page never requests.
+const initial = files.filter((f) => !f.path.endsWith('.woff') && !f.path.startsWith('licenses/')).reduce((a, f) => a + f.bytes, 0);
 const MB = 1024 * 1024;
 const limits = { totalBytes: 250 * MB, files: 1500, initialBytes: 50 * MB, mobileInitialBytes: 20 * MB };
 const sourceMaps = files.filter((f) => f.path.endsWith('.map'));
@@ -40,6 +41,12 @@ const report = {
 };
 const html = readFileSync(join(dir, 'index.html'), 'utf8');
 report.checks.relative_asset_paths = !/(src|href)="\/(?!\/)/.test(html);
+// Development tools must be compiled out of the shipped JS (strings unique to the dev platform/overlay).
+const js = files.filter((f) => f.path.endsWith('.js')).map((f) => readFileSync(join(dir, f.path), 'utf8')).join('\n');
+report.checks.no_dev_platform = !/DUPLICATE gameplayStart|dev platform \(simulated\)/.test(js);
+report.checks.no_dev_overlay = !js.includes('dev-overlay');
+// Third-party notices ship inside the bundle.
+report.checks.licenses_present = ['licenses/Fredoka-OFL-1.1.txt', 'licenses/three.js-MIT.txt'].every((l) => files.some((f) => f.path === l));
 console.log(JSON.stringify({ ...report, files: report.files.slice(0, 12) }, null, 2));
 writeFileSync('qa/budget.json', JSON.stringify(report, null, 2));
 const failed = Object.entries(report.checks).filter(([, v]) => !v);

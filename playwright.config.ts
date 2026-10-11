@@ -10,7 +10,8 @@ export default defineConfig({
   timeout: 240_000,
   expect: { timeout: 30_000 },
   workers: 1,
-  reporter: [['list'], ['json', { outputFile: 'qa/e2e-results.json' }]],
+  // E2E_JSON lets each suite keep its own results file (e.g. qa/e2e-flows-results.json).
+  reporter: [['list'], ['json', { outputFile: process.env.E2E_JSON ?? 'qa/e2e-results.json' }]],
   use: {
     baseURL: 'http://localhost:4180',
     viewport: { width: 960, height: 540 },

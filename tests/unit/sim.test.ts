@@ -73,37 +73,45 @@ describe('cargo stack', () => {
 
 describe('run session', () => {
   it('is deterministic and frame-rate independent with scripted input', () => {
+    const N = 3500; // compare every run at the same fixed step
+    const snap = (run: ReturnType<typeof session>) => ({
+      s: run.truck.s, x: run.truck.x, tip: run.truck.tip, coins: run.stats.coins, items: run.truck.itemCount,
+      stack: run.truck.columns.flatMap((c) => c.items.map((it) => [it.def.id, it.X, it.V, it.cond])),
+    });
+    const input = (k: number) => ({ steer: Math.sin(k / 70) * 0.8, shed: k === 2400 });
     const play = (frameDt: number) => {
       const track = trackOf(['start', 'cargo_trio', 'gentle_curve', 'cone_slalom', 'hill_crest', 's_bend', 'finish']);
       const run = session(track, 'pickup', 15, track.endS - 88);
       let k = 0;
+      const out: { at: ReturnType<typeof snap> | null } = { at: null };
       const loop = new FixedLoop({
         step: (dt) => {
           k++;
-          const steer = Math.sin(k / 70) * 0.8;
-          run.step(dt, { steer, shed: k === 2400 });
+          run.step(dt, input(k));
+          if (k === N) out.at = snap(run);
         },
         render: () => {},
       }, 120);
-      for (let t = 0; t < 30; t += frameDt) loop.advance(frameDt);
-      // run exactly the same number of steps
-      return { steps: run.steps, s: run.truck.s, x: run.truck.x, coins: run.stats.coins, items: run.truck.itemCount };
+      for (let t = 0; t < 31; t += frameDt) loop.advance(frameDt);
+      return { steps: k, at: out.at };
+    };
+    const replay = () => {
+      const track = trackOf(['start', 'cargo_trio', 'gentle_curve', 'cone_slalom', 'hill_crest', 's_bend', 'finish']);
+      const run = session(track, 'pickup', 15, track.endS - 88);
+      for (let k = 1; k <= N; k++) run.step(1 / 120, input(k));
+      return snap(run);
     };
     const a = play(1 / 60);
     const b = play(1 / 30);
     const c = play(1 / 144);
-    // compare at equal step counts by replaying the shorter
-    const n = Math.min(a.steps, b.steps, c.steps);
-    expect(n).toBeGreaterThan(3500);
-    const replay = () => {
-      const track = trackOf(['start', 'cargo_trio', 'gentle_curve', 'cone_slalom', 'hill_crest', 's_bend', 'finish']);
-      const run = session(track, 'pickup', 15, track.endS - 88);
-      for (let k = 1; k <= n; k++) run.step(1 / 120, { steer: Math.sin(k / 70) * 0.8, shed: k === 2400 });
-      return { s: run.truck.s, x: run.truck.x, coins: run.stats.coins, items: run.truck.itemCount };
-    };
-    const r1 = replay();
-    const r2 = replay();
-    expect(r1).toEqual(r2);
+    for (const r of [a, b, c]) expect(r.steps).toBeGreaterThan(N);
+    expect(a.at).not.toBeNull();
+    // the cargo actually moved during the comparison window, so equality is meaningful
+    expect(a.at!.items).toBeGreaterThan(0);
+    expect(b.at).toEqual(a.at);
+    expect(c.at).toEqual(a.at);
+    expect(replay()).toEqual(a.at);
+    expect(replay()).toEqual(replay());
   });
 
   it('collects coins and cargo', () => {

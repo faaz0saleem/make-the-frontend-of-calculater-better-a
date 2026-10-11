@@ -21,7 +21,10 @@ npm run dev           # dev server on http://localhost:5173 (dev tools enabled)
 Useful dev URL parameters (dev server only):
 - `?platform=dev`: simulated platform. Add `&ads=finish|unfilled|adblock|adCooldown|late|duplicate|never`, `&muteAudio=true`, or `&profile=<name>` for a separate save.
 - `?dev=1`: performance/debug overlay. The backquote key `` ` `` toggles it.
-- `?platform=standalone`: skip the CrazyGames SDK and save to localStorage.
+
+Also available in production builds, but ignored on CrazyGames domains:
+- `?platform=standalone`: skip the CrazyGames SDK and save to localStorage (used by the automated tests and for self-hosting).
+- `?qa=1`: test hooks on `window.__wh` (see "Build").
 
 ## Build
 ```bash
@@ -41,16 +44,17 @@ For a Full Launch package run `npm run build:full && node scripts/package.mjs di
 | Ads | None. No ad buttons or placeholders, and the SDK ad API is never called | Optional rewarded Spare Tire offer on the crash screen (occasional), optional rewarded paint trial in the Garage, midgame ads only at results-screen round boundaries |
 | Approval | Upload via the developer portal | **Requires CrazyGames selection, integration and review.** Building with `--mode full` does not grant Full Launch. |
 
-Production builds strip all development tools (dev overlay, simulated platform). Query-gated QA hooks (`?qa=1`) remain so automated tests can drive the production build. They only read state, toggle the scripted test driver, and change simulation speed; they never grant rewards.
+Production builds strip all development tools (dev overlay, simulated platform). Query-gated test hooks (`?qa=1`) remain so the automated tests can drive the real production build. They expose the `Game` object (the tests use it to force crashes and finishes, which settle rewards normally), the scripted test driver and a simulation-speed control. They are never enabled on CrazyGames domains, and `?platform=standalone` is ignored there too, so on CrazyGames the Data module is always the save.
 
 ## Tests
 ```bash
 npm run typecheck     # tsc --noEmit
-npm test              # 76 unit tests (Vitest)
-npm run build && npm run e2e   # Playwright against the production build in a nested-path iframe
+npm test              # unit tests (Vitest)
+npm run build && npx playwright test tests/e2e/flows.spec.ts tests/e2e/input.spec.ts   # 11 e2e tests, production build in a nested-path iframe
 npx playwright test tests/e2e/screens.spec.ts   # screenshot matrix (12 sizes) + layout audit -> qa/
+npm run e2e           # all Playwright specs (flows + input + screenshot matrix)
 ```
-Tuning harnesses (not part of CI) live in `tests/tools`. Run them with `npx vitest run -c vitest.tools.config.ts <name>`, for example `leveldoc` (regenerates LEVEL_DESIGN.md), `economy`, `diag`, `explore`.
+Tuning harnesses (not part of CI) live in `tests/tools`. Run them with `npx vitest run -c vitest.tools.config.ts <name>`, for example `leveldoc` (regenerates LEVEL_DESIGN.md), `economy`, `diag`, `explore`. Report-style harnesses write to `qa/tmp/<name>.txt` (gitignored) unless `OUT=<file>` is set.
 
 ## Deploying to CrazyGames
 1. `npm run release` (or `npm run build:full` plus packaging for an approved Full Launch).

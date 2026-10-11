@@ -127,8 +127,9 @@ export class Game {
       } else {
         this.audio.removeMute('hidden');
         this.audio.resumeIfNeeded();
-        this.pause.remove('hidden');
+        // Open the pause menu before dropping 'hidden' so gameplay never resumes for an instant.
         if (this.fsm.state === 'driving') this.openPause();
+        this.pause.remove('hidden');
       }
     });
     on(window, 'blur', () => {
@@ -136,8 +137,8 @@ export class Game {
       this.input.releaseAll();
     });
     on(window, 'focus', () => {
-      this.pause.remove('blur');
       if (this.fsm.state === 'driving' && this.run?.state === 'running') this.openPause();
+      this.pause.remove('blur');
     });
     on(window, 'resize', () => this.renderer.resize(window.innerWidth, window.innerHeight));
     on(window, 'pointerdown', () => this.audio.resumeIfNeeded());
@@ -585,8 +586,9 @@ export class Game {
     this.endTimer = 0;
     this.ui.hideScreens();
     this.audio.startDriveLoops();
+    // Hold the countdown reason across the state change so gameplayStart fires only after "go".
+    this.pause.add('countdown');
     this.goState('driving');
-    this.pause.add('user');
     this.beginCountdown();
     return true;
   }
@@ -708,7 +710,8 @@ export class Game {
     if (!this.ads.available || this.rewardOfferedThisBreak || this.ads.busy) return;
     const now = performance.now();
     if (now - this.sessionStart < 180_000) return;
-    if (now - this.ads.lastMidgameAt < 180_000) return;
+    // At most one midgame per 3 minutes, and never within 3 minutes of any other ad (e.g. a Garage paint trial).
+    if (now - this.ads.lastMidgameAt < 180_000 || now - this.ads.lastAdAt < 180_000) return;
     this.goState('ad');
     await this.ads.show('midgame');
   }
@@ -800,6 +803,7 @@ export class Game {
   }
 
   devText(): string {
+    if (!__DEV_TOOLS__) return ''; // compiled out of production builds
     const i = this.renderer.info();
     const run = this.run;
     const lines = [
