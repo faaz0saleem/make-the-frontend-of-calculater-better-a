@@ -1,7 +1,7 @@
 import type * as THREE from 'three';
 import { Rng } from '../core/rng';
 import type { WorldId } from '../sim/types';
-import { Kit, mix, shade } from './geo';
+import { Kit, isLowDetail, mix, shade } from './geo';
 import { THEMES, type Theme } from './themes';
 
 /**
@@ -23,11 +23,13 @@ export interface SceneryPiece {
 const cache = new Map<string, SceneryPiece[]>();
 
 export function sceneryFor(world: WorldId, kind: 'building' | 'prop' | 'tall'): SceneryPiece[] {
-  const key = `${world}:${kind}`;
+  const base = `${world}:${kind}`;
+  // Cached per detail level; the seed ignores detail so Low and High build the same town.
+  const key = `${base}:${isLowDetail() ? 'low' : 'full'}`;
   const hit = cache.get(key);
   if (hit) return hit;
   const t = THEMES[world];
-  const rng = new Rng(`scenery-${key}`);
+  const rng = new Rng(`scenery-${base}`);
   const out: SceneryPiece[] = [];
   if (kind === 'building') {
     for (let i = 0; i < 8; i++) out.push(world === 1 ? harborHouse(t, rng, i) : world === 2 ? adobe(t, rng, i) : marketBuilding(t, rng, i));

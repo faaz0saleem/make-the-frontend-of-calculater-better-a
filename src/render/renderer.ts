@@ -151,6 +151,8 @@ export class GameRenderer {
   }
 
   private setupComposer(): void {
+    // composer.dispose() frees only its own targets; the passes (bloom mips, materials) need their own.
+    for (const pass of this.composer?.passes ?? []) pass.dispose();
     this.composer?.dispose();
     this.composer = null;
     this.bloomPass = null;

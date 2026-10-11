@@ -41,6 +41,8 @@ export interface PlatformAdapter {
   onSettingsChange(cb: (s: PlatformSettings) => void): () => void;
   onAuthChange(cb: () => void): () => void;
   requestAd(type: AdType, hooks: AdHooks): Promise<AdOutcome>;
+  /** Give up on the ad in flight (the caller timed out); later callbacks for it are ignored. */
+  cancelAd?(): void;
   /** Locale hint for future translations; the game ships English. */
   locale(): string;
 }

@@ -229,6 +229,23 @@ describe('AdController', () => {
     expect(ads.lastMidgameAt).toBe(5000);
   });
 
+  it('after a timed-out ad that never answered, the SDK adapter accepts new requests', async () => {
+    vi.useFakeTimers();
+    const f = fakeSdk();
+    f.setAd(() => {}); // the SDK never calls back
+    const p = new CrazyGamesPlatform(f.sdk, 'full');
+    const ads = new AdController(p, new PauseManager(), muteSpy());
+    ads.timeoutMs = 1000;
+    const first = ads.show('rewarded');
+    vi.advanceTimersByTime(1100);
+    expect((await first).outcome).toEqual({ status: 'error', code: 'timeout' });
+    f.setAd((cb) => { cb.adStarted?.(); cb.adFinished?.(); });
+    const second = await ads.show('rewarded');
+    expect(second.outcome.status).toBe('finished');
+    expect(second.granted).toBe(true);
+    vi.useRealTimers();
+  });
+
   it('is a no-op when the build has no ad provider', async () => {
     const pause = new PauseManager();
     const ads = new AdController(new StandalonePlatform('basic', 'x', false), pause, muteSpy());

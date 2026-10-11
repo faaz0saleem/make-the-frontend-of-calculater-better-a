@@ -33,7 +33,9 @@ export function withLowDetail<T>(on: boolean, fn: () => T): T {
     lowDetail = prev;
   }
 }
-const seg = (n: number): number => (lowDetail ? Math.max(5, Math.round(n * 0.55)) : n);
+export const isLowDetail = (): boolean => lowDetail;
+// Low detail never adds sides (a 4-sided slab stays 4-sided).
+const seg = (n: number): number => (lowDetail ? Math.min(n, Math.max(5, Math.round(n * 0.55))) : n);
 
 export class Kit {
   private parts: THREE.BufferGeometry[] = [];
@@ -76,7 +78,7 @@ export class Kit {
 
   sphere(r: number, color: number, x = 0, y = 0, z = 0, t: XForm & { seg?: number } = {}): this {
     const n = seg(t.seg ?? 12);
-    return this.add(new THREE.SphereGeometry(r, n, Math.max(5, Math.round(n * 0.7))), color, x, y, z, t);
+    return this.add(new THREE.SphereGeometry(r, n, Math.max(lowDetail ? 5 : 6, Math.round(n * 0.7))), color, x, y, z, t);
   }
 
   cone(r: number, h: number, color: number, x = 0, y = 0, z = 0, t: XForm & { seg?: number } = {}): this {

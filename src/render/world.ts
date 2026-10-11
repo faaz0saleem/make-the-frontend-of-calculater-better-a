@@ -4,7 +4,7 @@ import { FORK_LANE } from '../data/chunks';
 import type { PlacedChunk } from '../sim/builder';
 import type { Track } from '../sim/track';
 import type { EdgeKind, Feature, Pose, WorldId } from '../sim/types';
-import { Kit, shade, withLowDetail } from './geo';
+import { Kit, isLowDetail, shade, withLowDetail } from './geo';
 import { MAT, TEX } from './materials';
 import { makeCargoMesh } from './models/cargo';
 import { barrierKit, bumpKit, cartKit, coneKit, signMaterial, signPostKit } from './models/props';
@@ -57,23 +57,27 @@ const _q = new THREE.Quaternion();
 const _sc = new THREE.Vector3();
 const UP = new THREE.Vector3(0, 1, 0);
 
-let coneGeo: THREE.BufferGeometry | null = null;
-let crateGeo: THREE.BufferGeometry | null = null;
+// Instanced obstacle geometry, cached per detail level (built inside withLowDetail on Low).
+const coneGeos = new Map<boolean, THREE.BufferGeometry>();
+const crateGeos = new Map<boolean, THREE.BufferGeometry>();
 let coinGeo: THREE.BufferGeometry | null = null;
 const ringGeo = new THREE.RingGeometry(0.75, 0.95, 28);
 const blobGeo = new THREE.PlaneGeometry(1, 1);
 const signGeo = new THREE.PlaneGeometry(1.25, 1.25);
 
 function getConeGeo(): THREE.BufferGeometry {
+  let coneGeo = coneGeos.get(isLowDetail());
   if (!coneGeo) {
     const k = new Kit();
     coneKit(k, 0, 0, 0);
     coneGeo = k.build();
+    coneGeos.set(isLowDetail(), coneGeo);
   }
   return coneGeo;
 }
 
 function getCrateGeo(): THREE.BufferGeometry {
+  let crateGeo = crateGeos.get(isLowDetail());
   if (!crateGeo) {
     const k = new Kit();
     k.box(0.78, 0.74, 0.78, 0xb5793f, 0, 0.37, 0, { r: 0.04 });
@@ -82,6 +86,7 @@ function getCrateGeo(): THREE.BufferGeometry {
     k.box(0.07, 0.74, 0.8, 0x8a5a2e, -0.36, 0.37, 0);
     k.box(0.07, 0.74, 0.8, 0x8a5a2e, 0.36, 0.37, 0);
     crateGeo = k.build();
+    crateGeos.set(isLowDetail(), crateGeo);
   }
   return crateGeo;
 }

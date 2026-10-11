@@ -65,6 +65,8 @@ export class AdController {
       outcome = { status: 'error', code: 'exception', message: String(e) };
     }
     if (timer) clearTimeout(timer);
+    // We stopped waiting: tell the adapter so it doesn't stay "busy" for every later request.
+    if (outcome.status === 'error' && outcome.code === 'timeout') this.platform.cancelAd?.();
     if (started) this.audio.removeMute('ad');
     this.pause.remove('ad');
     this.active = 0;

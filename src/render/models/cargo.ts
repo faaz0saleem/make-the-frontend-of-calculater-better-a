@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { CARGO, type CargoShape } from '../../data/cargo';
-import { Kit } from '../geo';
+import { Kit, withLowDetail } from '../geo';
 import { MAT } from '../materials';
 
 interface CargoGeo {
@@ -10,10 +10,20 @@ interface CargoGeo {
 
 const cache = new Map<CargoShape, CargoGeo>();
 
-/** Each cargo type is modelled with its CargoDef footprint, origin at bottom centre. */
+/**
+ * Each cargo type is modelled with its CargoDef footprint, origin at bottom centre. Cargo is the
+ * hero of the game (on the truck, in the album), so it is always built at full detail, even when
+ * first requested while Low-preset scenery is being built.
+ */
 export function cargoGeometry(shape: CargoShape): CargoGeo {
   const hit = cache.get(shape);
   if (hit) return hit;
+  const res = withLowDetail(false, () => buildCargoGeometry(shape));
+  cache.set(shape, res);
+  return res;
+}
+
+function buildCargoGeometry(shape: CargoShape): CargoGeo {
   const d = CARGO[shape];
   const W = d.width, H = d.height;
   const k = new Kit();
@@ -231,9 +241,7 @@ export function cargoGeometry(shape: CargoShape): CargoGeo {
       break;
     }
   }
-  const res: CargoGeo = { body: k.build(), lamp: L.empty ? null : L.build() };
-  cache.set(shape, res);
-  return res;
+  return { body: k.build(), lamp: L.empty ? null : L.build() };
 }
 
 /** A cargo item visual (group) sharing cached geometry. */

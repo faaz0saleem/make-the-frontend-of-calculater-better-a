@@ -286,15 +286,18 @@ export class UiRoot implements UiBridge {
     actions.append(results);
     let adRow: HTMLElement | null = null;
     if (o.offerAd) {
+      const lockable: HTMLButtonElement[] = [];
       const watch = btn({ cls: 'big grape', icon: 'ad', label: 'Watch ad: free Spare Tire', testid: 'btn-ad-continue', onClick: async () => {
-        watch.disabled = true;
+        // Nothing else on this screen may act while the ad is loading or playing.
+        for (const b of lockable) b.disabled = true;
         const ok = await g.adContinue();
         if (!ok) {
-          watch.disabled = true;
+          for (const b of lockable) if (b !== watch) b.disabled = false;
           watch.querySelector('span')!.textContent = 'Ad not available right now';
         }
       } });
       const no = btn({ cls: 'big cream', label: 'No thanks', testid: 'btn-ad-decline', onClick: () => { this.click(); g.settleAndShowResults('crashed'); } });
+      lockable.push(watch, no, ...Array.from(actions.querySelectorAll('button')));
       adRow = h('div', null, h('p', { class: 'muted', style: 'text-align:center;margin:.4em 0' }, 'Optional: watch an ad to continue this run (cargo already lost stays lost). You can also buy Spare Tires with coins in the Garage.'), h('div', { class: 'ad-offer' }, watch, no));
     }
     return h('div', { class: 'layer center screen-dim fade-in', 'data-testid': 'screen-crash' },
@@ -337,8 +340,12 @@ export class UiRoot implements UiBridge {
     const canNext = !!(lv && finished && nextLv && g.store.levelUnlocked(nextLv.id));
     const tutorialDone = lv?.id === 'h1' && g.store.data.tutorialDone;
     const btns = h('div', { class: 'row center', style: 'margin-top:.7em' });
+    // A midgame ad may run between this screen and the next one: lock the row while it does, so a
+    // second tap can't navigate somewhere else and then be overridden when the ad ends.
+    const lockRow = () => btns.querySelectorAll('button').forEach((b) => ((b as HTMLButtonElement).disabled = true));
     const retry = btn({ cls: tutorialDone && finished ? 'cream' : 'mint big', icon: 'retry', label: summary.mode === 'endless' ? 'Drive again' : 'Retry', testid: 'btn-retry', onClick: async () => {
       this.click();
+      lockRow();
       await g.maybeMidgame();
       g.restartRun();
     } });
@@ -348,6 +355,7 @@ export class UiRoot implements UiBridge {
         g.toMenu();
         return;
       }
+      lockRow();
       await g.maybeMidgame();
       g.goState('briefing');
       this.show('briefing', nextLv!.id);

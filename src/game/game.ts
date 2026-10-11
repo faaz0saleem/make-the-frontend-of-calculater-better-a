@@ -140,6 +140,13 @@ export class Game {
       if (this.fsm.state === 'driving' && this.run?.state === 'running') this.openPause();
       this.pause.remove('blur');
     });
+    // A lost WebGL context freezes the picture: stop the run instead of letting it play on unseen.
+    on(this.renderer.canvas, 'webglcontextlost', () => {
+      this.openPause();
+      this.pause.add('gpu');
+      this.input.releaseAll();
+    });
+    on(this.renderer.canvas, 'webglcontextrestored', () => this.pause.remove('gpu'));
     on(window, 'resize', () => this.renderer.resize(window.innerWidth, window.innerHeight));
     on(window, 'pointerdown', () => this.audio.resumeIfNeeded());
     // platform mute (overrides user volume; combined with other mute reasons)
@@ -561,8 +568,16 @@ export class Game {
   async adContinue(): Promise<boolean> {
     const run = this.run;
     if (!run || run.state !== 'crashed' || run.cfg.mode === 'daily') return false;
+    const runId = this.runId;
     this.goState('ad');
     const res = await this.ads.show('rewarded');
+    // The player may have left the crash screen while the ad was loading (results, menu, retry).
+    const stillHere = this.run === run && this.runId === runId && this.fsm.state === 'ad' && !this.store.isSettled(runId);
+    if (!stillHere) {
+      // They watched it, so keep the reward as a Spare Tire for later instead of reviving this run.
+      if (res.granted) this.store.grantAdReward(res.requestId, 'token');
+      return false;
+    }
     if (!res.granted) {
       this.goState('crashed');
       return false;
@@ -584,6 +599,7 @@ export class Game {
     this.view?.snapshot();
     this.endHandled = false;
     this.endTimer = 0;
+    this.crashCargoValue = 0; // cargo lost in the first crash was already counted; start fresh
     this.ui.hideScreens();
     this.audio.startDriveLoops();
     // Hold the countdown reason across the state change so gameplayStart fires only after "go".
@@ -643,7 +659,7 @@ export class Game {
     this.audio.stopDriveLoops();
     this.pause.remove('user');
     this.pause.remove('countdown');
-    this.countdownLeft = 0;
+    this.clearCountdown();
     this.timeScale = 1;
     this.updateGameplayState();
   }
@@ -653,7 +669,7 @@ export class Game {
     if (this.fsm.state !== 'driving' || !this.run || this.run.state !== 'running') return;
     this.pause.add('user');
     this.pause.remove('countdown');
-    this.countdownLeft = 0;
+    this.clearCountdown();
     this.goState('paused');
     this.audio.duckDrive(true);
     this.ui.show('paused');
@@ -667,6 +683,13 @@ export class Game {
   }
 
   private countdownEl: HTMLElement | null = null;
+
+  /** Stop a countdown early (pause, quit, restart): the big digit must not linger on other screens. */
+  private clearCountdown(): void {
+    this.countdownLeft = 0;
+    this.countdownEl?.remove();
+    this.countdownEl = null;
+  }
   private beginCountdown(): void {
     this.pause.add('countdown');
     this.pause.remove('user');

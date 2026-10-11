@@ -149,9 +149,11 @@ export class CrazyGamesPlatform implements PlatformAdapter {
         if (done) return; // ignore duplicate/late callbacks
         done = true;
         this.adActive = false;
+        this.cancelCurrent = null;
         this.note(o.status === 'finished' ? 'adFinished' : 'adError', o.status === 'error' ? o.code : undefined);
         resolve(o);
       };
+      this.cancelCurrent = () => finish({ status: 'error', code: 'timeout' });
       try {
         this.sdk.ad.requestAd(type, {
           adStarted: () => {
@@ -166,6 +168,12 @@ export class CrazyGamesPlatform implements PlatformAdapter {
         finish({ status: 'error', code: 'exception', message: String(e) });
       }
     });
+  }
+
+  private cancelCurrent: (() => void) | null = null;
+
+  cancelAd(): void {
+    this.cancelCurrent?.();
   }
 
   locale(): string {

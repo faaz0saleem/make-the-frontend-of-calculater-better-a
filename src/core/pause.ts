@@ -1,4 +1,4 @@
-export type PauseReason = 'user' | 'hidden' | 'blur' | 'ad' | 'menu' | 'countdown' | 'tutorial' | 'crash' | 'platform';
+export type PauseReason = 'user' | 'hidden' | 'blur' | 'ad' | 'menu' | 'countdown' | 'tutorial' | 'crash' | 'platform' | 'gpu';
 
 /**
  * Centralized pause reasons. Simulation runs only when no reason is active.

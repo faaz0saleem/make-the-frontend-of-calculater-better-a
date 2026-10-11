@@ -1,10 +1,10 @@
 {
   "dir": "dist",
   "fileCount": 12,
-  "totalBytes": 1029275,
-  "initialBytes": 968959,
-  "totalMB": 0.982,
-  "initialMB": 0.924,
+  "totalBytes": 1028354,
+  "initialBytes": 962254,
+  "totalMB": 0.981,
+  "initialMB": 0.918,
   "gzipTotalMB": 0.343,
   "checks": {
     "total_le_250MB": true,
@@ -14,13 +14,16 @@
     "total_le_20MB_without_sdk": true,
     "no_source_maps": true,
     "index_at_root": true,
-    "relative_asset_paths": true
+    "relative_asset_paths": true,
+    "no_dev_platform": true,
+    "no_dev_overlay": true,
+    "licenses_present": true
   },
   "files": [
     {
-      "path": "assets/index-5ydbPMRx.js",
-      "bytes": 890003,
-      "gz": 241527
+      "path": "assets/index-BsIe62nZ.js",
+      "bytes": 889082,
+      "gz": 241202
     },
     {
       "path": "assets/index-DDZdUCXM.css",
@@ -65,7 +68,7 @@
     {
       "path": "index.html",
       "bytes": 1292,
-      "gz": 648
+      "gz": 647
     },
     {
       "path": "licenses/three.js-MIT.txt",
