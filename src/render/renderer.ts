@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
+import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
 import type { WorldId } from '../sim/types';
 import { FollowCamera } from './camera';
@@ -43,6 +44,23 @@ export function autoQuality(): QualityName {
   if (coarse || mem <= 4 || cores <= 4) return 'medium';
   return 'high';
 }
+
+/** Gentle colour grade (a touch more saturation) and vignette, applied before tone mapping on High. */
+const GRADE_SHADER = {
+  uniforms: { tDiffuse: { value: null }, uSat: { value: 1.08 }, uVig: { value: 0.26 } },
+  vertexShader: 'varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+  fragmentShader: [
+    'uniform sampler2D tDiffuse; uniform float uSat; uniform float uVig; varying vec2 vUv;',
+    'void main() {',
+    '  vec4 c = texture2D(tDiffuse, vUv);',
+    '  float l = dot(c.rgb, vec3(0.2126, 0.7152, 0.0722));',
+    '  c.rgb = max(mix(vec3(l), c.rgb, uSat), 0.0);',
+    '  vec2 d = (vUv - 0.5) * vec2(1.15, 1.0);',
+    '  c.rgb *= 1.0 - uVig * smoothstep(0.32, 0.82, length(d));',
+    '  gl_FragColor = c;',
+    '}',
+  ].join('\n'),
+};
 
 export class GameRenderer {
   readonly renderer: THREE.WebGLRenderer;
@@ -136,6 +154,8 @@ export class GameRenderer {
     }
     this.renderer.shadowMap.type = THREE.PCFShadowMap;
     this.world.setQuality({ sceneryDensity: p.density, glow: p.glow, shadows: p.shadows });
+    // presets without the post-processing grade get a free CSS vignette
+    this.canvas.parentElement?.classList.toggle('vignette', !p.bloom);
     // particles capacity
     this.scene.remove(this.particles.points);
     this.particles.dispose();
@@ -163,6 +183,7 @@ export class GameRenderer {
     this.bloomPass = new UnrealBloomPass(new THREE.Vector2(256, 256), 0.55, 0.4, 1.0);
     this.bloomPass.strength = this.theme.night ? 0.42 : 0.22;
     this.composer.addPass(this.bloomPass);
+    this.composer.addPass(new ShaderPass(GRADE_SHADER));
     this.composer.addPass(new OutputPass());
   }
 

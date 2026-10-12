@@ -193,6 +193,11 @@ export class RunView {
     if (run.state === 'crashed' && run.crashReason === 'barrier') yaw += Math.min(0.6, run.aftermathTime * 1.2) * Math.sign(tr.vx || 1);
     if (run.state === 'crashed' && run.crashReason === 'fell') pitch -= Math.min(0.9, run.aftermathTime * 1.5);
     r.truck.update(dt, tr, pos, yaw, pitch, this.time, this.reducedMotion);
+    // little exhaust puffs from the tailpipe (rear left, low)
+    if (run.state === 'running' && Math.random() < dt * 7) {
+      const ex = pos.clone().addScaledVector(this.fwd, -2.1).addScaledVector(this.right, -0.55);
+      r.particles.emit('smoke', ex.x, ex.y + 0.35, ex.z, 1, { color: r.theme.id === 3 ? 0x8a86a8 : 0xd6dae2, vx: -this.fwd.x * 1.5, vz: -this.fwd.z * 1.5 });
+    }
     // dust behind wheels at speed / in canyon / puddle spray
     if (run.state === 'running' && !tr.airborne && r.theme.id === 2 && Math.random() < dt * 10) {
       const back = pos.clone().addScaledVector(this.fwd, -1.8);

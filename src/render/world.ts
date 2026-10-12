@@ -4,6 +4,7 @@ import { FORK_LANE } from '../data/chunks';
 import type { PlacedChunk } from '../sim/builder';
 import type { Track } from '../sim/track';
 import type { EdgeKind, Feature, Pose, WorldId } from '../sim/types';
+import { AmbientLayer, type AmbientKind, type AmbientSpawn } from './ambient';
 import { Kit, isLowDetail, shade, withLowDetail } from './geo';
 import { MAT, TEX } from './materials';
 import { makeCargoMesh } from './models/cargo';
@@ -48,10 +49,13 @@ interface ChunkView {
   crates: InstancedSet | null;
   world: WorldId;
   minElev: number;
+  /** moving roadside life anchored in this chunk (chunk-local render space) */
+  ambient: AmbientSpawn[];
 }
 
 const _pose = {} as Pose;
 const _v = new THREE.Vector3();
+const _truckW = new THREE.Vector3();
 const _m4 = new THREE.Matrix4();
 const _q = new THREE.Quaternion();
 const _sc = new THREE.Vector3();
@@ -107,6 +111,8 @@ export class WorldView {
   chunks = new Map<number, ChunkView>();
   theme: Theme = THEMES[1];
   coinMesh: THREE.InstancedMesh;
+  /** gulls, boats, tumbleweeds, balloons, lanterns, people... (visual only) */
+  readonly ambient = new AmbientLayer();
   private ground: THREE.Mesh;
   private time = 0;
   private quality: WorldQuality = { sceneryDensity: 1, glow: true, shadows: true };
@@ -117,6 +123,7 @@ export class WorldView {
     this.coinMesh.count = 0;
     this.coinMesh.frustumCulled = false;
     this.root.add(this.coinMesh);
+    this.root.add(this.ambient.group);
     const gg = new THREE.CircleGeometry(700, 40);
     gg.rotateX(-Math.PI / 2);
     this.ground = new THREE.Mesh(gg, new THREE.MeshStandardMaterial({ color: 0xd9c8a4, roughness: 1 }));
@@ -126,6 +133,7 @@ export class WorldView {
 
   setQuality(q: WorldQuality): void {
     this.quality = q;
+    this.ambient.setTier(q.sceneryDensity < 0.5 ? 0 : q.sceneryDensity < 0.9 ? 1 : 2, q.sceneryDensity < 0.5);
   }
 
   setTheme(world: WorldId): void {
@@ -154,6 +162,7 @@ export class WorldView {
     for (const serial of [...this.chunks.keys()]) this.removeChunk(serial);
     this.originX = 0;
     this.originZ = 0;
+    this.ambient.reset();
   }
 
   removeChunk(serial: number): void {
@@ -183,8 +192,10 @@ export class WorldView {
     const ax = _pose.x, az = _pose.z;
     const group = new THREE.Group();
     group.position.set(ax - this.originX, 0, az - this.originZ);
-    const view: ChunkView = { serial: pc.serial, group, pickups: [], movers: [], coins: [], cones: null, crates: null, world: pc.world, minElev: Infinity };
-    const ctx = new ChunkCtx(track, ax, az, theme, rng, this.quality);
+    const view: ChunkView = { serial: pc.serial, group, pickups: [], movers: [], coins: [], cones: null, crates: null, world: pc.world, minElev: Infinity, ambient: [] };
+    // Separate generator for decoration added later, so the original layout stays exactly the same.
+    const arng = new Rng(pc.serial * 104729 + pc.world * 977 + Math.round(pc.s0) + 17);
+    const ctx = new ChunkCtx(track, ax, az, theme, rng, this.quality, arng);
     // ---------------- road surface with gap cut-outs
     const gaps = pc.features.filter((f) => f.kind === 'gap');
     const roadGeo = buildRoad(track, pc.s0, pc.s1, ax, az, gaps);
@@ -199,6 +210,7 @@ export class WorldView {
       ctx.scenery(pc.s0, pc.s1, pc.features);
       for (const f of pc.features) this.addFeature(ctx, view, track, f, pc);
     });
+    view.ambient = ctx.ambient;
     // ---------------- assemble merged meshes
     const stat = ctx.kit.build();
     const mesh = new THREE.Mesh(stat, MAT.scenery);
@@ -506,6 +518,8 @@ export class WorldView {
     }
     this.coinMesh.count = n;
     this.coinMesh.instanceMatrix.needsUpdate = true;
+    this.toWorld(track, truckS, 0, 1, _truckW);
+    this.ambient.update(this.time, this.chunks.values(), cam, _truckW);
     // ground disc follows the camera below the lowest visible road
     this.ground.position.set(camPos.x, this.groundMinElev - (this.theme.id === 2 ? 34 : this.theme.id === 1 ? 2.2 : 1.9), camPos.z);
   }
@@ -600,9 +614,19 @@ class ChunkCtx {
   gantries = new Set<number>();
   glowPts: number[] = [];
   minElev = Infinity;
+  ambient: AmbientSpawn[] = [];
   private pose = {} as Pose;
 
-  constructor(public track: Track, private ax: number, private az: number, public theme: Theme, public rng: Rng, private q: WorldQuality) {}
+  constructor(public track: Track, private ax: number, private az: number, public theme: Theme, public rng: Rng, private q: WorldQuality, public arng: Rng) {}
+
+  /** Moving roadside life at a track-space anchor. */
+  spawn(kind: AmbientKind, pose: Pose, lat: number, h: number, o: Partial<AmbientSpawn> = {}): void {
+    const q = this.local(pose, lat, h, _v);
+    this.ambient.push({
+      kind, x: q.x, y: q.y, z: q.z, ry: -pose.heading, fx: Math.sin(pose.heading), fz: -Math.cos(pose.heading),
+      ph: this.arng.range(0, Math.PI * 2), a: 0, b: 0, color: 0xffffff, ...o,
+    });
+  }
 
   local(pose: Pose, lat: number, h: number, out: THREE.Vector3): THREE.Vector3 {
     return out.set(pose.x + Math.cos(pose.heading) * lat - this.ax, pose.elev + h, pose.z + Math.sin(pose.heading) * lat - this.az);
@@ -773,6 +797,7 @@ class ChunkCtx {
     const props = sceneryFor(t.id, 'prop');
     const tall = sceneryFor(t.id, 'tall');
     const blockedS = feats.filter((f) => f.kind === 'overhead' || f.kind === 'hook' || f.kind === 'depot').map((f) => [f.s - 4, f.s + f.len + 4]);
+    const skipped: { s: number; side: -1 | 1; w: number; d: number; wallOff: number }[] = [];
     for (const side of [-1, 1] as const) {
       for (const run of this.runs(s0, s1, side)) {
         if (run.edge === 'drop') continue;
@@ -788,7 +813,7 @@ class ChunkCtx {
             const gap = this.rng.range(0.4, 1.4);
             const lat = side * (pose.halfWidth + 3.1 + wallOff + gap + b.d / 2);
             this.placePiece(b, pose, lat, side);
-          }
+          } else skipped.push({ s: center, side, w: b.w, d: b.d, wallOff });
           s += b.w + this.rng.range(0.6, 2.4);
         }
         // sidewalk props
@@ -811,6 +836,193 @@ class ChunkCtx {
         }
       }
     }
+    this.decor(s0, s1, feats, skipped);
+  }
+
+  /**
+   * Second decoration pass (street furniture, gap fillers, waterfront, telegraph lines and moving
+   * life). Uses its own generator so the first pass above is unchanged, and stays out of reserved
+   * stretches (signs, beams, hooks, depots, gaps, gusts, set pieces) so nothing hides a hazard.
+   */
+  private decor(s0: number, s1: number, feats: Feature[], skipped: { s: number; side: -1 | 1; w: number; d: number; wallOff: number }[]): void {
+    const t = this.theme;
+    const r = this.arng;
+    const dens = this.q.sceneryDensity;
+    const reserved = (s: number, pad = 0): boolean => feats.some((f) => {
+      const k = f.kind as string;
+      if (k === 'sign') return s > f.s - 4 - pad && s < f.s + 4 + pad && (f.label === 'finish' ? false : true);
+      if (k === 'overhead') return s > f.s - 11 - pad && s < f.s + f.len + 4 + pad;
+      if (k === 'hook' || k === 'depot' || k === 'gust') return s > f.s - 5 - pad && s < f.s + f.len + 5 + pad;
+      if (k === 'gap') return s > f.s - 3 - pad && s < f.s + f.len + 3 + pad;
+      if (f.tag === 'drop' || k === 'roller' || k === 'traffic') return s > f.s - 6 - pad && s < f.s + f.len + 6 + pad;
+      return false;
+    });
+    const finish = feats.find((f) => f.kind === 'sign' && f.label === 'finish');
+    const nearFinish = (s: number): boolean => !!finish && s > finish.s - 16 && s < finish.s + 8;
+    const street = sceneryFor(t.id, 'street');
+    const fillers = sceneryFor(t.id, 'filler');
+    const shirts = [...t.buildings, ...t.awnings.map((a) => a[0])];
+    const skins = [0xf1c7a1, 0xd9a47a, 0xb07a52, 0x8a5a3a, 0xffd9b8];
+    const pose = {} as Pose;
+
+    // gap fillers in building slots the first pass left empty
+    for (const sk of skipped) {
+      if (r.next() > 0.6 * Math.max(0.5, dens) || reserved(sk.s) || nearFinish(sk.s)) continue;
+      const f = r.pick(fillers);
+      if (f.w > sk.w + 1.5) continue;
+      this.track.poseAt(sk.s, pose);
+      this.placePiece(f, pose, sk.side * (pose.halfWidth + 3.1 + sk.wallOff + 0.8 + f.d / 2), sk.side);
+    }
+
+    for (const side of [-1, 1] as const) {
+      for (const run of this.runs(s0, s1, side)) {
+        const len = run.b - run.a;
+        if (run.edge === 'curb') {
+          // canyon tumbleweeds roll along the outer sidewalk; keep that strip free of furniture
+          let tumbleLane = false;
+          if (t.id === 2 && len > 24 && r.chance(0.55)) {
+            const a = run.a + 2, L = Math.min(len - 4, 40);
+            if (!reserved(a) && !reserved(a + L)) {
+              this.track.poseAt(a, pose);
+              this.spawn('tumble', pose, side * (pose.halfWidth + 2.3), 0, { a: L, b: r.range(4.5, 6) });
+              tumbleLane = true;
+            }
+          }
+          // street furniture at the outer sidewalk band
+          if (!tumbleLane) {
+            for (let s = run.a + r.range(3, 8); s < run.b - 1.5; s += r.range(9, 15) / Math.max(0.35, dens)) {
+              if (reserved(s) || nearFinish(s)) continue;
+              this.track.poseAt(s, pose);
+              this.placePiece(r.pick(street), pose, side * (pose.halfWidth + 2.55), side);
+            }
+          }
+          // a few pedestrians (harbor promenade, night market)
+          if (t.id !== 2) {
+            for (let s = run.a + r.range(4, 12); s < run.b - 2; s += r.range(14, 26) / Math.max(0.5, dens)) {
+              if (reserved(s) || nearFinish(s)) continue;
+              this.track.poseAt(s, pose);
+              const lat = side * (pose.halfWidth + r.range(1.9, 2.9));
+              const shirt = r.pick(shirts), skin = r.pick(skins);
+              this.spawn('person', pose, lat, 0.02, { color: shirt });
+              const p = this.ambient[this.ambient.length - 1];
+              this.ambient.push({ ...p, kind: 'head', color: skin });
+            }
+          }
+          // canyon telegraph line along one side
+          if (t.id === 2 && side === 1 && len > 30) this.telegraph(run.a, run.b, side, reserved);
+        } else if (run.edge === 'drop' && t.id === 1 && len > 20) {
+          // harbour water: piers with moored boats, channel buoys, boats further out
+          if (len >= 30 && r.chance(0.7)) {
+            const ps = run.a + r.range(6, len - 8);
+            if (!reserved(ps)) this.pier(ps, side);
+          }
+          for (let i = 0; i < 2; i++) {
+            const bs = run.a + r.range(2, len - 2);
+            this.track.poseAt(bs, pose);
+            const q = this.local(pose, side * (pose.halfWidth + r.range(12, 30)), -1.35, _v);
+            this.kit.cyl(0.3, 0.32, 0.7, 0xffc23a, q.x, q.y, q.z, { seg: 8 });
+            this.kit.cone(0.3, 0.45, 0xfff6e6, q.x, q.y + 0.55, q.z, { seg: 8 });
+          }
+          if (r.chance(0.6 * Math.max(0.5, dens))) {
+            this.track.poseAt(run.a + r.range(0, len), pose);
+            this.spawn('boat', pose, side * (pose.halfWidth + r.range(18, 40)), -1.6, { ry: -pose.heading + r.range(-1.2, 1.2), color: r.pick([0xffffff, 0xff8a7a, 0x9fd8ff, 0xffe08a]) });
+          }
+          this.track.poseAt(run.a + len / 2, pose);
+          this.spawn('bird', pose, side * (pose.halfWidth + r.range(6, 22)), r.range(9, 14), { a: r.range(3, 7), b: r.sign() * r.range(0.35, 0.6) });
+        }
+        // birds over the street: gulls (harbor) or hawks (canyon, higher and slower)
+        if (t.id !== 3 && run.edge !== 'drop') {
+          const n = Math.round(r.range(0.4, 1.6) * Math.max(0.5, dens));
+          for (let i = 0; i < n; i++) {
+            this.track.poseAt(run.a + r.range(0, len), pose);
+            if (t.id === 1) this.spawn('bird', pose, side * (pose.halfWidth + r.range(6, 16)), r.range(10, 16), { a: r.range(3, 7), b: r.sign() * r.range(0.35, 0.6) });
+            else this.spawn('bird', pose, side * (pose.halfWidth + r.range(10, 24)), r.range(18, 26), { a: r.range(8, 14), b: r.sign() * r.range(0.15, 0.3), color: 0x8a6a4a });
+          }
+        }
+      }
+    }
+
+    // hot-air balloons far out over the canyon (and now and then the harbour)
+    const mid = (s0 + s1) / 2;
+    if ((t.id === 2 && r.chance(0.6)) || (t.id === 1 && r.chance(0.25))) {
+      this.track.poseAt(mid, pose);
+      const side = r.sign();
+      this.spawn('balloon', pose, side * (pose.halfWidth + r.range(45, 90)), r.range(26, 44), { color: r.pick([0xff5a4e, 0xffc23a, 0x3cc9a7, 0x5a8aff, 0xff8cc6]) });
+    }
+    // sky lanterns drifting up over the night market
+    if (t.id === 3) {
+      const n = Math.round(r.range(3, 6) * Math.max(0.5, dens));
+      for (let i = 0; i < n; i++) {
+        this.track.poseAt(s0 + r.range(0, s1 - s0), pose);
+        this.spawn('lantern', pose, r.sign() * (pose.halfWidth + r.range(5, 30)), 3, { b: r.range(0.7, 1.1), color: r.pick([0xffb347, 0xff8a3d, 0xffc23a, 0xff6f61]) });
+      }
+    }
+    // finish-line crowd that cheers the truck in
+    if (finish) {
+      for (const side of [-1, 1] as const) {
+        const n = 4 + Math.round(4 * Math.max(0.5, dens));
+        for (let i = 0; i < n; i++) {
+          const s = finish.s - 10 + (13 * (i + r.range(0.1, 0.9))) / n;
+          if (s < s0 || s > s1) continue;
+          this.track.poseAt(s, pose);
+          const e = side < 0 ? pose.left : pose.right;
+          if (e === 'drop') continue;
+          const lat = side * (pose.halfWidth + r.range(1.6, 3.0));
+          this.spawn('person', pose, lat, 0.02, { color: r.pick(shirts), crowd: true });
+          const p = this.ambient[this.ambient.length - 1];
+          this.ambient.push({ ...p, kind: 'head', color: r.pick(skins) });
+        }
+      }
+    }
+  }
+
+  /** Wooden pier into the harbour with a moored boat. */
+  private pier(s: number, side: -1 | 1): void {
+    const pose = this.track.poseAt(s, {} as Pose);
+    const W = pose.halfWidth;
+    const ry = -pose.heading;
+    for (let i = 0; i < 5; i++) {
+      const q = this.local(pose, side * (W + 1 + i * 2), -0.2, _v);
+      this.kit.box(2.4, 0.18, 2.05, i % 2 ? 0x8a5a36 : 0x9a6a40, q.x, q.y, q.z, { ry });
+      for (const ds of [-0.95, 0.95]) {
+        const pq = this.local(this.track.poseAt(s + ds, {} as Pose), side * (W + 1 + i * 2), -1.4, new THREE.Vector3());
+        this.kit.cyl(0.13, 0.15, 2.4, 0x6b4a33, pq.x, pq.y, pq.z, { seg: 6 });
+      }
+    }
+    this.spawn('boat', this.track.poseAt(s + 3.2, {} as Pose), side * (W + 6), -1.6, { ry: ry + Math.PI / 2, color: this.arng.pick([0xffffff, 0xff8a7a, 0x9fd8ff]) });
+  }
+
+  /** Canyon telegraph poles with sagging wires (parallel to the road, never over it). */
+  private telegraph(a: number, b: number, side: -1 | 1, reserved: (s: number) => boolean): void {
+    const r = this.arng;
+    let prev: THREE.Vector3[] | null = null;
+    for (let s = a + r.range(2, 20); s < b - 1; s += 26) {
+      if (reserved(s)) { prev = null; continue; }
+      const pose = this.track.poseAt(s, {} as Pose);
+      const base = this.local(pose, side * (pose.halfWidth + 3.25), 0, new THREE.Vector3());
+      this.kit.cyl(0.1, 0.12, 6.4, 0x6b4a33, base.x, base.y + 3.2, base.z, { seg: 6 });
+      this.kit.box(1.5, 0.12, 0.12, 0x8a5a36, base.x, base.y + 6.0, base.z, { ry: -pose.heading + Math.PI / 2 });
+      const tips: THREE.Vector3[] = [];
+      for (const off of [-0.6, 0, 0.6]) {
+        const tip = this.local(pose, side * (pose.halfWidth + 3.25 + off), 6.1, new THREE.Vector3());
+        this.kit.box(0.08, 0.14, 0.08, 0xfff0d8, tip.x, tip.y + 0.05, tip.z);
+        tips.push(tip);
+      }
+      if (prev) {
+        for (let w = 0; w < 3; w++) {
+          const p0 = prev[w], p1 = tips[w];
+          const m = new THREE.Vector3().addVectors(p0, p1).multiplyScalar(0.5);
+          m.y -= 0.35;
+          for (const [u, v] of [[p0, m], [m, p1]] as const) {
+            const d = new THREE.Vector3().subVectors(v, u);
+            const L = d.length();
+            const c = new THREE.Vector3().addVectors(u, v).multiplyScalar(0.5);
+            this.kit.box(0.03, 0.03, L, 0x3a2a1a, c.x, c.y, c.z, { ry: Math.atan2(d.x, d.z), rx: -Math.asin(d.y / L) });
+          }
+        }
+      }
+      prev = tips;
+    }
   }
 
   private placePiece(pc: SceneryPiece, pose: Pose, lat: number, side: -1 | 1): void {
@@ -823,6 +1035,16 @@ class ChunkCtx {
       const c = Math.cos(ry), s = Math.sin(ry);
       for (const [lx, ly, lz, col] of pc.lights) {
         this.glowPts.push(q.x + lx * c + lz * s, q.y + ly, q.z - lx * s + lz * c, col);
+      }
+    }
+    if (pc.spawns) {
+      const c = Math.cos(ry), s = Math.sin(ry);
+      const ph = this.arng.range(0, Math.PI * 2);
+      for (const [kind, lx, ly, lz, a, b, color] of pc.spawns) {
+        this.ambient.push({
+          kind, x: q.x + lx * c + lz * s, y: q.y + ly, z: q.z - lx * s + lz * c, ry: kind === 'person' || kind === 'head' ? ry + Math.PI : ry,
+          fx: Math.sin(pose.heading), fz: -Math.cos(pose.heading), ph, a, b, color, crowd: a > 0,
+        });
       }
     }
   }

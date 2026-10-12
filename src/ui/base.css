@@ -5,6 +5,8 @@ html, body { margin: 0; height: 100%; background: #24304a; overflow: hidden; }
 body { font-family: Fredoka, 'Trebuchet MS', system-ui, sans-serif; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
 #app { position: fixed; inset: 0; }
 #game { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; outline: none; }
+/* Soft vignette for Low/Medium (High grades in the post-processing pass instead). */
+#app.vignette::after { content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 1; background: radial-gradient(ellipse 62% 62% at 50% 46%, transparent 55%, rgba(18, 24, 42, 0.34) 100%); }
 .boot { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; background: radial-gradient(circle at 50% 40%, #33456b, #1b2338); color: #fff6e6; transition: opacity .4s; z-index: 50; }
 .boot.hidden { opacity: 0; pointer-events: none; }
 .boot-logo { font-weight: 700; font-size: clamp(36px, 7vw, 72px); letter-spacing: .02em; text-shadow: 0 5px 0 #ff5a4e; }

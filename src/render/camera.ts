@@ -15,6 +15,7 @@ export class FollowCamera {
   override: { back: number; side: number; up: number; lookAhead: number; lookUp: number; lookSide?: number } | null = null;
   reducedMotion = false;
   aspect = 16 / 9;
+  private baseFov = 58;
 
   constructor() {
     this.cam = new THREE.PerspectiveCamera(60, 16 / 9, 0.3, 1200);
@@ -24,7 +25,8 @@ export class FollowCamera {
     this.aspect = a;
     this.cam.aspect = a;
     // Portrait screens: wider vertical FOV so the road ahead stays visible.
-    this.cam.fov = a < 1 ? 74 : a < 1.4 ? 66 : 58;
+    this.baseFov = a < 1 ? 74 : a < 1.4 ? 66 : 58;
+    this.cam.fov = this.baseFov;
     this.cam.updateProjectionMatrix();
   }
 
@@ -93,6 +95,13 @@ export class FollowCamera {
       this.look.lerp(target, kl);
     }
     if (this.pos.y > truckPos.y + ceiling) this.pos.y = truckPos.y + ceiling;
+    // a few degrees of extra field of view at speed sells the rush (less under reduced motion)
+    const kick = mode === 'drive' && !this.override ? Math.max(0, Math.min(7, (speed - 15) * 0.6)) * (this.reducedMotion ? 0.35 : 1) : 0;
+    const fov = this.cam.fov + (this.baseFov + kick - this.cam.fov) * (1 - Math.exp(-2.5 * dt));
+    if (Math.abs(fov - this.cam.fov) > 0.01) {
+      this.cam.fov = fov;
+      this.cam.updateProjectionMatrix();
+    }
     this.cam.position.copy(this.pos);
     if (this.shakeAmt > 0.001) {
       this.shakeT += dt * 38;
