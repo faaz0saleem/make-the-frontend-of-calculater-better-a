@@ -42,3 +42,15 @@ Living task list so work can resume across sessions. Status: `[x]` done · `[~]`
 ## Known follow-ups
 - Tyre-mark decals (currently dust/sparks only)
 - A recorded human run for the preview video would show the wobble better than the scripted driver
+
+## Improvement pass (2026-10-12)
+- [x] Moving roadside life (gulls/hawks, boats, tumbleweeds, balloons, lanterns, people, finish crowd, windmill rotors)
+- [x] Street furniture and gap fillers per world, harbour piers, canyon telegraph lines
+- [x] Richer sky/backdrops per world; Long Haul switches sky/fog/ground with the world
+- [x] Camera FOV kick at speed, exhaust puffs, grade + vignette (High) / CSS vignette (Low/Medium)
+- [ ] New obstacle batch (drop set pieces, rollers, strap power-up, combo, difficulty retune): designed and
+      partly implemented on local branch wip/gameplay, NOT merged — the renderer for the new kinds is missing
+      and the batch was stopped when the usage limit ran out
+- [ ] 15-minute gameplay recording: `npx vite build --mode capture && node scripts/longplay.mjs 15`
+      (about 4-5 h of software rendering in this container; output in media/longplay/, too large for git)
+- [ ] Re-render covers/preview videos with the new scenery (`node scripts/capture.mjs covers|video ...`)
