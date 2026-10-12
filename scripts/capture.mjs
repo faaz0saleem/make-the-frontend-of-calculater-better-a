@@ -97,11 +97,13 @@ if (mode === 'covers') {
   rmSync(frames, { recursive: true, force: true });
   mkdirSync(frames, { recursive: true });
   let n = 0;
-  const clips = [
+  const allClips = [
     { req: { mode: 'campaign', levelId: 'h6' }, seconds: 16, dur: 6.5 },
     { req: { mode: 'campaign', levelId: 'c7' }, seconds: 9.5, dur: 6.5 },
     { req: { mode: 'campaign', levelId: 'm4' }, seconds: 11.5, dur: 6 },
   ];
+  // Very short clips (under 10 s) use one continuous shot instead of choppy cuts.
+  const clips = total < 10 ? [allClips[Number(process.env.CLIP ?? 0)]] : allClips;
   // Share the gameplay frames between the clips in proportion to their nominal lengths.
   const gameplayFrames = Math.round(total * fps) - 2;
   const nominal = clips.reduce((a, c) => a + c.dur, 0);
