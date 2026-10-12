@@ -9,8 +9,18 @@ import { CARGO } from './data/cargo';
 
 const params = new URLSearchParams(location.search);
 const bootFill = document.getElementById('boot-fill') as HTMLElement | null;
+// The bar eases to each real milestone, then keeps creeping toward the next one so it never looks frozen.
+let bootTarget = 0.05;
+let bootShown = 0;
+const bootTimer = setInterval(() => {
+  if (bootShown < bootTarget) bootShown += (bootTarget - bootShown) * 0.35 + 0.002;
+  else if (bootTarget < 1) bootShown += (Math.min(0.95, bootTarget + 0.22) - bootShown) * 0.02;
+  bootShown = Math.min(bootTarget >= 1 ? 1 : 0.95, bootShown);
+  if (bootFill) bootFill.style.width = `${(bootShown * 100).toFixed(1)}%`;
+  if (bootTarget >= 1 && bootShown >= 0.999) clearInterval(bootTimer);
+}, 50);
 const progress = (p: number) => {
-  if (bootFill) bootFill.style.width = `${Math.round(p * 100)}%`;
+  bootTarget = Math.max(bootTarget, p);
 };
 
 function fatal(msg: string): void {

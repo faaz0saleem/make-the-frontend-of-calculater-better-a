@@ -32,9 +32,16 @@ export async function selectPlatform(stage: ReleaseStage, params: URLSearchParam
     await p.init();
     return { platform: p, note: 'forced standalone' };
   }
+  // Opened straight from disk: the SDK cannot work there (its init would wait forever), so play locally.
+  if (location.protocol === 'file:') {
+    const p = new StandalonePlatform(stage, 'local-file', true);
+    await p.init();
+    return { platform: p, note: 'opened from a local file' };
+  }
   try {
     const sdk = await loadSdkScript();
-    await sdk.init();
+    // Never let a stalled SDK handshake hold the loading screen.
+    await Promise.race([sdk.init(), new Promise<never>((_, rej) => setTimeout(() => rej(new Error('SDK init timeout')), 8000))]);
     if (sdk.environment === 'disabled') {
       const p = new StandalonePlatform(stage, 'disabled', true);
       await p.init();
