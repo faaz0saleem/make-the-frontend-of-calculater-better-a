@@ -1,0 +1,108 @@
+{
+  "dir": "dist",
+  "errors": [],
+  "menuBeforeGesture": "no audio context",
+  "menuAfterGesture": "running",
+  "menu": {
+    "music": {
+      "rms": -42.9,
+      "median": -51.2,
+      "maxWin": -34.2,
+      "peak": -26.7,
+      "blocks": 173
+    },
+    "sfx": {
+      "rms": -120,
+      "median": -120,
+      "maxWin": -120,
+      "peak": -120,
+      "blocks": 173
+    },
+    "out": {
+      "rms": -45.2,
+      "median": -52.6,
+      "maxWin": -35.8,
+      "peak": -28.9,
+      "blocks": 172
+    }
+  },
+  "driving": {
+    "music": {
+      "rms": -40.4,
+      "median": -50.3,
+      "maxWin": -26.9,
+      "peak": -21.2,
+      "blocks": 344
+    },
+    "sfx": {
+      "rms": -23.6,
+      "median": -23.7,
+      "maxWin": -22.7,
+      "peak": -14.5,
+      "blocks": 345
+    },
+    "out": {
+      "rms": -25.8,
+      "median": -25.9,
+      "maxWin": -22.3,
+      "peak": -15.8,
+      "blocks": 345
+    }
+  },
+  "engineBed": {
+    "median": -23.6,
+    "rms": -23.4
+  },
+  "oneShots": {
+    "pickup": {
+      "maxWin": -16.8,
+      "peak": -8.1,
+      "marginOverEngine": 6.8
+    },
+    "spill": {
+      "maxWin": -18.4,
+      "peak": -13.2,
+      "marginOverEngine": 5.2
+    },
+    "shed": {
+      "maxWin": -22.5,
+      "peak": -13.8,
+      "marginOverEngine": 1.1
+    },
+    "bank": {
+      "maxWin": -23.2,
+      "peak": -13.8,
+      "marginOverEngine": 0.4
+    },
+    "coin": {
+      "maxWin": -23.1,
+      "peak": -14.1,
+      "marginOverEngine": 0.5
+    },
+    "full": {
+      "maxWin": -22.6,
+      "peak": -13.4,
+      "marginOverEngine": 1
+    },
+    "land": {
+      "maxWin": -16.3,
+      "peak": -8.5,
+      "marginOverEngine": 7.3
+    },
+    "impact": {
+      "maxWin": -13.3,
+      "peak": -7.7,
+      "marginOverEngine": 10.3
+    },
+    "squish": {
+      "maxWin": -21.1,
+      "peak": -13.4,
+      "marginOverEngine": 2.5
+    },
+    "nearMiss": {
+      "maxWin": -22.1,
+      "peak": -13.5,
+      "marginOverEngine": 1.5
+    }
+  }
+}
