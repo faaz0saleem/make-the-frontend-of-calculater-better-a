@@ -171,6 +171,8 @@ export class RunView {
     const vx = this.prev.vx + (this.cur.vx - this.prev.vx) * a;
     const vs = this.prev.vs + (this.cur.vs - this.prev.vs) * a;
     this.track.poseAt(Math.min(s, this.track.endS - 0.01), this.pose);
+    // endless rotates worlds every few depots: sky, fog and ground follow the road under the truck
+    if (this.pose.world !== r.theme.id) r.setTheme(this.pose.world);
     const h = this.pose.heading;
     this.fwd.set(Math.sin(h), 0, -Math.cos(h));
     this.right.set(Math.cos(h), 0, Math.sin(h));

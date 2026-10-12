@@ -153,6 +153,7 @@ export class GameRenderer {
       this.sun.shadow.map = null;
     }
     this.renderer.shadowMap.type = THREE.PCFShadowMap;
+    this.sky.setDetail(p.name !== 'low');
     this.world.setQuality({ sceneryDensity: p.density, glow: p.glow, shadows: p.shadows });
     // presets without the post-processing grade get a free CSS vignette
     this.canvas.parentElement?.classList.toggle('vignette', !p.bloom);
@@ -193,8 +194,15 @@ export class GameRenderer {
     MAT.applyTheme(t);
     this.sky.setTheme(t);
     this.world.setTheme(world);
-    this.scene.fog = new THREE.Fog(t.fog, t.fogNear * (this.preset.name === 'low' ? 0.85 : 1), t.fogFar * (this.preset.name === 'low' ? 0.85 : 1));
-    this.scene.background = new THREE.Color(t.skyHorizon);
+    const k = this.preset.name === 'low' ? 0.85 : 1;
+    // Reuse the Fog: a new object makes every fogged material re-resolve its program (endless switches worlds mid-run).
+    if (this.scene.fog instanceof THREE.Fog) {
+      this.scene.fog.color.setHex(t.fog);
+      this.scene.fog.near = t.fogNear * k;
+      this.scene.fog.far = t.fogFar * k;
+    } else this.scene.fog = new THREE.Fog(t.fog, t.fogNear * k, t.fogFar * k);
+    if (this.scene.background instanceof THREE.Color) this.scene.background.setHex(t.skyHorizon);
+    else this.scene.background = new THREE.Color(t.skyHorizon);
     this.hemi.color.setHex(t.hemiSky);
     this.hemi.groundColor.setHex(t.hemiGround);
     this.hemi.intensity = t.hemiIntensity;
