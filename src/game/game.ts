@@ -105,7 +105,8 @@ export class Game {
     this.thumbs = new Thumbnailer(this.renderer.renderer);
     this.input = new Input(canvas);
     this.input.settings.sensitivity = s.sensitivity;
-    this.input.onAnyInput = () => this.audio.resumeIfNeeded();
+    // Browsers only allow sound after a gesture: the first key/tap anywhere starts the audio (and the menu music).
+    this.input.onAnyInput = () => this.audio.unlock();
     this.ads = new AdController(platform, this.pause, this.audio);
     this.gate = new GameplayGate(platform);
     this.loop = new FixedLoop({ step: (dt) => this.step(dt), render: (a, fdt) => this.render(a, fdt) }, TUNING.simHz, 12);
@@ -152,7 +153,8 @@ export class Game {
       this.pause.remove('gpu');
     });
     on(window, 'resize', () => this.renderer.resize(window.innerWidth, window.innerHeight));
-    on(window, 'pointerdown', () => this.audio.resumeIfNeeded());
+    on(window, 'pointerdown', () => this.audio.unlock());
+    on(window, 'keydown', () => this.audio.unlock());
     // platform mute (overrides user volume; combined with other mute reasons)
     if (this.platform.settings().muteAudio) this.audio.addMute('platform');
     this.disposers.push(
