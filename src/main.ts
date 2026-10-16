@@ -27,7 +27,7 @@ function fatal(msg: string): void {
   const boot = document.getElementById('boot');
   if (boot) {
     boot.classList.remove('hidden');
-    boot.innerHTML = `<div class="boot-logo">WOBBLE<span>HAUL</span></div><p style="max-width:420px;text-align:center;font-weight:600">${msg}</p>`;
+    boot.innerHTML = `<div class="boot-logo">OVER<span>LOADED!</span></div><p style="max-width:420px;text-align:center;font-weight:600">${msg}</p>`;
   }
 }
 

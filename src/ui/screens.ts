@@ -117,7 +117,7 @@ export class UiRoot implements UiBridge {
     start.setAttribute('data-autofocus', '');
     return h('div', { class: 'layer screen-dim light fade-in', 'data-testid': 'screen-title' },
       h('div', { class: 'title-wrap' },
-        h('div', { class: 'logo' }, 'WOBBLE', h('b', null, 'HAUL'), h('small', null, 'TALL-STACK DELIVERY')),
+        h('div', { class: 'logo' }, 'OVER', h('b', null, 'LOADED!'), h('small', null, 'TALL-STACK DELIVERY')),
         h('div', { class: 'col', style: 'align-items:center' }, start, h('div', { class: 'start-hint' }, 'First delivery · about 40 seconds'))));
   }
 
@@ -154,7 +154,7 @@ export class UiRoot implements UiBridge {
       btn({ cls: 'cream', icon: 'goals', label: 'Goals', testid: 'btn-goals', onClick: () => { this.click(); g.goState('album'); this.mount(this.goals()); } }),
     );
     const top = h('div', { class: 'hub-top' },
-      h('div', { class: 'hub-logo' }, 'WOBBLE ', h('b', null, 'HAUL')),
+      h('div', { class: 'hub-logo' }, 'OVER', h('b', null, 'LOADED!')),
       h('div', { class: 'row' }, this.coinPill(), btn({ cls: 'icon ghost', icon: 'gear', title: 'Settings', testid: 'btn-settings', onClick: () => { this.click(); this.settingsReturn = 'menu'; g.goState('settings'); this.show('settings'); } })));
     return h('div', { class: 'layer screen-dim light fade-in', 'data-testid': 'screen-menu' }, top,
       h('div', { class: 'hub-main' }, h('div', { class: 'play-card' }, play), sub, row, bottom));

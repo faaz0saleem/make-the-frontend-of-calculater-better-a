@@ -6,7 +6,7 @@ import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 
 const dist = process.argv[2] ?? 'dist';
-const out = process.argv[3] ?? 'release/wobble-haul-browser-test.html';
+const out = process.argv[3] ?? 'release/overloaded-browser-test.html';
 let html = readFileSync(join(dist, 'index.html'), 'utf8');
 
 const FONT_TYPES = { '.woff2': 'font/woff2', '.woff': 'font/woff' };

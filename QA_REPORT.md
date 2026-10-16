@@ -1,4 +1,4 @@
-# QA REPORT — Wobble Haul
+# QA REPORT — Overloaded
 
 Everything below was run in this repository's cloud container on 2026-10-10. Raw outputs are committed in `qa/` (`e2e-results.json`, `layout-report.json`, `budget.json`, `perf.json`, `screenshots/`). Nothing here was run on a real GPU, a phone, Safari, Firefox, Edge, or the CrazyGames portal; see "Not verified" at the end.
 
@@ -9,7 +9,7 @@ Everything below was run in this repository's cloud container on 2026-10-10. Raw
 | Node / npm | Node 22.22.0, npm 10 |
 | Browser | Chromium 141.0.7390.37 headless (Playwright 1.56.1, browser build 1194) |
 | WebGL | ANGLE → SwiftShader (Vulkan, **software rasteriser**, no GPU) |
-| Hosting during tests | `scripts/serve-nested.mjs`: production `dist/` served under `/games/wobble-haul/` inside an `<iframe>` of a host page, like a portal |
+| Hosting during tests | `scripts/serve-nested.mjs`: production `dist/` served under `/games/overloaded/` inside an `<iframe>` of a host page, like a portal |
 | Platform adapter during tests | `standalone` (localStorage) because the CrazyGames SDK host is not reachable from this container. The SDK adapter itself is covered by unit tests with a fake SDK |
 
 ## Results summary
@@ -20,7 +20,7 @@ Everything below was run in this repository's cloud container on 2026-10-10. Raw
 | E2E flows + input | `npm run build && E2E_JSON=qa/e2e-flows-results.json npx playwright test tests/e2e/flows.spec.ts tests/e2e/input.spec.ts` | E2E_RESULT — see `qa/e2e-flows-results.json` |
 | Screenshot matrix + layout audit | `npx playwright test tests/e2e/screens.spec.ts` | MATRIX_RESULT |
 | Bundle budget | `npm run budget` | all checks pass — see "Bundle" |
-| Upload ZIP | `npm run package` | `release/wobble-haul-basic.zip`, `index.html` at the root |
+| Upload ZIP | `npm run package` | `release/overloaded-basic.zip`, `index.html` at the root |
 | Boot timing | `node scripts/perf.mjs boot` | 1.3–2.1 s to the interactive menu (local server) |
 | Per-preset render cost | `node scripts/perf.mjs fps` | see "Performance" |
 | Browser soak | `node scripts/perf.mjs soak 8` | see "Soak" |

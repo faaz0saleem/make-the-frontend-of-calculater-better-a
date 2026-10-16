@@ -20,7 +20,7 @@ async function open(w, h, scale = 1, params = '') {
   ctx.setDefaultTimeout(240000);
   await ctx.addInitScript((v) => localStorage.setItem('standalone:wobblehaul.save', v), save);
   const page = await ctx.newPage();
-  await page.goto(`http://localhost:${PORT}/games/wobble-haul/index.html?platform=standalone${params}`);
+  await page.goto(`http://localhost:${PORT}/games/overloaded/index.html?platform=standalone${params}`);
   await page.waitForFunction(() => window.__wh !== undefined, null, { timeout: 60000 });
   await page.waitForTimeout(1500);
   return { ctx, page };
@@ -73,7 +73,7 @@ if (mode === 'covers') {
       ui.innerHTML = '';
       const logo = document.createElement('div');
       logo.className = 'logo';
-      logo.innerHTML = 'WOBBLE<b>HAUL</b>';
+      logo.innerHTML = 'OVER<b>LOADED!</b>';
       logo.style.cssText = `position:absolute;left:${l.x};top:${l.y};transform:translateX(-50%) rotate(-3deg);font-size:${l.size}px;white-space:nowrap`;
       ui.append(logo);
     }, sh.logo);

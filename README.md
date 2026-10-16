@@ -1,4 +1,4 @@
-# Wobble Haul
+# Overloaded
 
 A colourful 3D arcade delivery runner. You drive a tiny truck carrying a comically tall stack of boxes, cakes, fridges and pianos through a sunny harbour, a windy canyon and a neon night market. The truck drives forward on its own. You steer, pick up cargo, keep the stack balanced, shed the top item when you have to, and deliver it. More cargo pays more, but it also makes the truck harder to handle.
 
@@ -31,7 +31,7 @@ Also available in production builds, but ignored on CrazyGames domains:
 npm run build         # Basic Launch build (default): no ad UI anywhere  -> dist/
 npm run build:full    # Full Launch code paths enabled (ads wiring)       -> dist/
 npm run budget        # size/file-count checks vs CrazyGames limits       -> qa/budget.json
-npm run package       # upload ZIP with index.html at the root            -> release/wobble-haul-basic.zip
+npm run package       # upload ZIP with index.html at the root            -> release/overloaded-basic.zip
 npm run release       # typecheck + unit tests + build + budget + package
 ```
 For a Full Launch package run `npm run build:full && node scripts/package.mjs dist full`.
@@ -58,7 +58,7 @@ Tuning harnesses (not part of CI) live in `tests/tools`. Run them with `npx vite
 
 ## Deploying to CrazyGames
 1. `npm run release` (or `npm run build:full` plus packaging for an approved Full Launch).
-2. Upload `release/wobble-haul-basic.zip` in the developer portal as an HTML5 game. `index.html` sits at the ZIP root and all asset paths are relative.
+2. Upload `release/overloaded-basic.zip` in the developer portal as an HTML5 game. `index.html` sits at the ZIP root and all asset paths are relative.
 3. In the submission form, **enable the Progress Save (Data module) option**. Without it the Data module is disabled and progress will not persist.
 4. Orientation: landscape and portrait both work. Declare the supported orientations in the submission form; the game does not lock orientation.
 5. Use the portal's preview/QA tool to verify: the SDK environment is `crazygames`, gameplay events fire, saves round-trip for a guest and for a signed-in account, and the mute setting works.

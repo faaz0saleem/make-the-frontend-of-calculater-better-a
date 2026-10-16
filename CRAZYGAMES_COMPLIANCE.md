@@ -1,4 +1,4 @@
-# CRAZYGAMES COMPLIANCE — Wobble Haul
+# CRAZYGAMES COMPLIANCE — Overloaded
 
 **Date checked:** 2026-10-10 (the brief was researched on 2026-10-11; the clock in this environment reads 2026-10-10).
 
@@ -45,7 +45,7 @@
 | Mobile homepage: initial download ≤ 20 MB | 0.92 MB | B | pass |
 | Without the SDK the total counts as initial; with the SDK, measurement runs until `gameplayStart` | Both are tiny. First playable content (tutorial behind one click) appears after boot; `gameplayStart` fires only when the truck actually starts driving after the click | B; E `fresh player…` | pass |
 | Externally loaded builds: 20 s time-to-gameplay | Not externally loaded (everything is in the ZIP). Measured boot-to-title on a local server: see QA_REPORT | QA_REPORT | not applicable / informational |
-| Relative asset references | `base: './'`, budget check `relative_asset_paths` | B; E runs under `/games/wobble-haul/` | pass |
+| Relative asset references | `base: './'`, budget check `relative_asset_paths` | B; E runs under `/games/overloaded/` | pass |
 | Works on Chrome and Edge | Developed and tested on Chromium 141 (Playwright 1.56.1, browser build 1194). Edge (Chromium) not run here | E | Chrome pass; Edge not verified |
 | Smooth on a 4 GB RAM Chromebook | Low/Auto presets, capped resolution, bounded objects. No real device here | QA_REPORT perf | not verified (device) |
 | Safari works (otherwise disabled on Safari) | No WebKit-only APIs; audio unlock on gesture; `webkitAudioContext` fallback. Not run on Safari | — | not verified |
@@ -150,4 +150,4 @@
 2. Run the portal's preview/QA tool on the uploaded ZIP: SDK environment, gameplay events, Data module save/load for a guest and a signed-in account, the guest → login sync behaviour, and the mute setting.
 3. Real devices: 4 GB Chromebook (Chrome), Safari (macOS + iOS), Edge, an Android mid-range phone, and the CrazyGames iOS/Android app (safe areas, audio resume after interruption).
 4. Full Launch only: real ad delivery, cooldown behaviour, and the rewarded/midgame UI on a Full build.
-5. Trademark/name clearance for "Wobble Haul" (DECISIONS #1).
+5. Trademark/name clearance for "Overloaded" (DECISIONS #1, #21).

@@ -10,7 +10,7 @@ if (!existsSync(resolve(dist, 'index.html'))) throw new Error(`no index.html in 
 const bad = readdirSync(dist, { recursive: true }).filter((f) => String(f).endsWith('.map'));
 if (bad.length) throw new Error(`source maps found: ${bad.join(', ')}`);
 mkdirSync('release', { recursive: true });
-const out = resolve('release', `wobble-haul-${label}.zip`);
+const out = resolve('release', `overloaded-${label}.zip`);
 rmSync(out, { force: true });
 // -X strips extra file attributes; run inside dist so index.html is at the root of the archive
 execFileSync('zip', ['-r', '-X', '-9', out, '.', '-x', '*.DS_Store'], { cwd: dist, stdio: 'inherit' });

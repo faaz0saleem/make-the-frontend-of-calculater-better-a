@@ -6,7 +6,7 @@ import { extname, join, normalize, resolve } from 'node:path';
 
 const dist = resolve(process.argv[2] ?? 'dist');
 const port = Number(process.argv[3] ?? 4180);
-const BASE = '/games/wobble-haul/';
+const BASE = '/games/overloaded/';
 const types = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.woff2': 'font/woff2', '.woff': 'font/woff', '.png': 'image/png', '.json': 'application/json' };
 const host = (q) => `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Portal host (test)</title>
 <style>html,body{margin:0;height:100%;background:#111;overflow:hidden}iframe{position:absolute;inset:0;width:100%;height:100%;border:0}</style></head>

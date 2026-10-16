@@ -1,4 +1,4 @@
-# TASKS — Wobble Haul
+# TASKS — Overloaded
 
 Living task list so work can resume across sessions. Status: `[x]` done · `[~]` partial · `[ ]` todo.
 
@@ -33,7 +33,7 @@ Living task list so work can resume across sessions. Status: `[x]` done · `[~]`
 
 ## Owner / portal actions (cannot be done from this repository)
 - [ ] Re-read CrazyGames docs S1–S17 in full (only search summaries were reachable here) and re-check CRAZYGAMES_COMPLIANCE.md
-- [ ] Upload `release/wobble-haul-basic.zip`, enable Progress Save (Data module), declare orientations
+- [ ] Upload `release/overloaded-basic.zip`, enable Progress Save (Data module), declare orientations
 - [ ] Portal QA tool: SDK environment, gameplay events, Data module (guest + account), mute setting, app safe area
 - [ ] Real-device checks: 4 GB Chromebook, Android, iOS Safari, desktop Safari/Firefox/Edge
 - [ ] Human playtest for feel and difficulty; listen to the audio mix

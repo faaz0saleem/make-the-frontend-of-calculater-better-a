@@ -1,8 +1,8 @@
 {
-  "name": "wobble-haul",
+  "name": "overloaded",
   "private": true,
   "version": "1.0.0",
-  "description": "Wobble Haul - a 3D arcade delivery runner about a tiny truck with an impossibly tall stack of cargo.",
+  "description": "Overloaded - a 3D arcade delivery runner about a tiny truck with an impossibly tall stack of cargo.",
   "type": "module",
   "license": "UNLICENSED",
   "engines": {

@@ -18,7 +18,7 @@ const SET_PIECES: Record<string, string> = {
 
 test('write LEVEL_DESIGN.md', () => {
   const L: string[] = [];
-  L.push('# LEVEL DESIGN — Wobble Haul', '', '_Generated from `src/data/levels.ts` and `src/data/chunks.ts` by `npx vitest run -c vitest.tools.config.ts leveldoc`. Do not edit by hand._', '');
+  L.push('# LEVEL DESIGN — Overloaded', '', '_Generated from `src/data/levels.ts` and `src/data/chunks.ts` by `npx vitest run -c vitest.tools.config.ts leveldoc`. Do not edit by hand._', '');
   L.push('## Principles', '',
     '- Every level is a hand-ordered sequence of authored road chunks (shared library) plus a level-specific cargo pool, speed ramp and objectives.',
     '- Completion = reaching the depot. Three independent optional medals: **Delivery** (cargo value delivered ≥ target), **Route** (a route/skill objective), **Care** (cargo preservation).',
