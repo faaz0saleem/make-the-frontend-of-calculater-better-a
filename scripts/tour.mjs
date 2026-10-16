@@ -4,7 +4,7 @@
 // Midnight runs with the scripted driver, pause, results). Software GL: stills only, not frame rate.
 import { chromium } from '@playwright/test';
 import { spawn } from 'node:child_process';
-const PORT = 4331;
+const PORT = Number(process.env.PORT ?? 4331);
 const OUT = process.argv[4] ?? 'qa/tmp/tour';
 const [W, H] = (process.argv[2] ?? '1280x720').split('x').map(Number);
 const tag = process.argv[3] ?? 'desk';

@@ -9,7 +9,7 @@ import { spawn } from 'node:child_process';
 import { mkdirSync, writeFileSync } from 'node:fs';
 
 const dir = process.argv[2] ?? 'dist';
-const PORT = 4324;
+const PORT = Number(process.env.PORT ?? 4324);
 const server = spawn('python3', ['-m', 'http.server', String(PORT), '--directory', dir], { stdio: 'ignore' });
 await new Promise((r) => setTimeout(r, 800));
 const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--autoplay-policy=no-user-gesture-required'] });

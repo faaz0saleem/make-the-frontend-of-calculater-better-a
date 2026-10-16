@@ -5,6 +5,9 @@ import { defineConfig } from '@playwright/test';
  * Chromium uses SwiftShader (software WebGL) in CI containers, so flows use the query-gated QA
  * hooks (?qa=1) to drive with the scripted autopilot at accelerated simulation speed.
  */
+// E2E_PORT lets several checkouts run their suites at the same time without sharing a server.
+const PORT = Number(process.env.E2E_PORT ?? 4180);
+
 export default defineConfig({
   testDir: 'tests/e2e',
   timeout: 240_000,
@@ -13,7 +16,7 @@ export default defineConfig({
   // E2E_JSON lets each suite keep its own results file (e.g. qa/e2e-flows-results.json).
   reporter: [['list'], ['json', { outputFile: process.env.E2E_JSON ?? 'qa/e2e-results.json' }]],
   use: {
-    baseURL: 'http://localhost:4180',
+    baseURL: `http://localhost:${PORT}`,
     viewport: { width: 960, height: 540 },
     deviceScaleFactor: 1,
     launchOptions: {
@@ -21,8 +24,8 @@ export default defineConfig({
     },
   },
   webServer: {
-    command: 'node scripts/serve-nested.mjs dist 4180',
-    port: 4180,
+    command: `node scripts/serve-nested.mjs dist ${PORT}`,
+    port: PORT,
     reuseExistingServer: true,
   },
 });
