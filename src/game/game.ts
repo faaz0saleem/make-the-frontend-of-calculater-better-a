@@ -424,7 +424,7 @@ export class Game {
     const a = this.audio;
     ev.on('coin', () => a.play('coin'));
     ev.on('pickup', ({ item }) => {
-      a.play('pickup');
+      a.play('pickup', 1, { height: run.truck.itemCount, cargo: item.def.id });
       if (!this.store.data.album.includes(item.def.id)) this.hud?.toast(`New cargo: ${item.def.name}!`, 'good');
       if (this.store.data.album.includes(item.def.id) && item.def.rare) this.hud?.toast('Golden Gnome!', 'good');
     });
@@ -434,12 +434,12 @@ export class Game {
     });
     ev.on('spill', ({ items, reason }) => {
       if (reason === 'crash') return;
-      a.play('spill');
+      a.play('spill', 1, { count: items.length, cargo: items[0]?.item.def.id });
       const names = items.map((d) => d.item.def.name);
       this.hud?.toast(items.length > 1 ? `Lost ${items.length} items!` : `Lost: ${names[0]}`, 'bad');
     });
     ev.on('shed', ({ hero }) => {
-      a.play('shed');
+      a.play('shed', 1, { hero });
       if (hero) this.hud?.toast('Smart shed!', 'good');
       if (this.tipShed) {
         this.tipShed = false;
@@ -490,17 +490,18 @@ export class Game {
       a.play('finish');
       this.hud?.toast('Delivered!', 'big');
     });
-    ev.on('bank', ({ value, mult }) => {
+    ev.on('bank', ({ value, mult, items }) => {
       if (value <= 0) return;
-      a.play('bank');
+      a.play('bank', 1, { count: items.length });
       this.hud?.toast(`Banked +${value}${mult > 1 ? ` (×${mult})` : ''}`, 'big');
     });
     ev.on('carry', ({ mult }) => this.hud?.toast(`Carrying on: ×${mult}`, 'good'));
     ev.on('squish', ({ item }) => {
-      a.play('squish');
+      a.play('squish', 1, { cargo: item.def.id });
       this.hud?.toast(`${item.def.name} squished!`, 'bad');
     });
     ev.on('damage', ({ item }) => {
+      a.play('damage', 0.6 + 0.4 * item.def.fragility, { cargo: item.def.id });
       if (item.cond < 0.5 && item.def.fragility > 0.5) this.hud?.toast(`${item.def.name} damaged`, 'bad');
     });
     ev.on('gate', ({ tag }) => {
