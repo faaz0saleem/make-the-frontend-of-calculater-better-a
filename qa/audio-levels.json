@@ -5,104 +5,104 @@
   "menuAfterGesture": "running",
   "menu": {
     "music": {
-      "rms": -42.9,
-      "median": -51.2,
-      "maxWin": -34.2,
-      "peak": -26.7,
-      "blocks": 173
+      "rms": -23.2,
+      "median": -23.4,
+      "maxWin": -18.4,
+      "peak": -9.4,
+      "blocks": 174
     },
     "sfx": {
       "rms": -120,
       "median": -120,
       "maxWin": -120,
       "peak": -120,
-      "blocks": 173
+      "blocks": 174
     },
     "out": {
-      "rms": -45.2,
-      "median": -52.6,
-      "maxWin": -35.8,
-      "peak": -28.9,
-      "blocks": 172
+      "rms": -22.2,
+      "median": -22.4,
+      "maxWin": -17.2,
+      "peak": -8.4,
+      "blocks": 174
     }
   },
   "driving": {
     "music": {
-      "rms": -40.4,
-      "median": -50.3,
-      "maxWin": -26.9,
-      "peak": -21.2,
-      "blocks": 344
+      "rms": -22,
+      "median": -25,
+      "maxWin": -13,
+      "peak": -6.6,
+      "blocks": 346
     },
     "sfx": {
-      "rms": -23.6,
-      "median": -23.7,
-      "maxWin": -22.7,
-      "peak": -14.5,
-      "blocks": 345
+      "rms": -29.7,
+      "median": -30.2,
+      "maxWin": -26.6,
+      "peak": -18.3,
+      "blocks": 346
     },
     "out": {
-      "rms": -25.8,
-      "median": -25.9,
-      "maxWin": -22.3,
-      "peak": -15.8,
-      "blocks": 345
+      "rms": -20.4,
+      "median": -22.8,
+      "maxWin": -11.9,
+      "peak": -4.9,
+      "blocks": 346
     }
   },
   "engineBed": {
-    "median": -23.6,
-    "rms": -23.4
+    "median": -30.1,
+    "rms": -28.1
   },
   "oneShots": {
     "pickup": {
-      "maxWin": -16.8,
-      "peak": -8.1,
-      "marginOverEngine": 6.8
+      "maxWin": -17.2,
+      "peak": -7.6,
+      "marginOverEngine": 12.9
     },
     "spill": {
-      "maxWin": -18.4,
-      "peak": -13.2,
-      "marginOverEngine": 5.2
+      "maxWin": -16.7,
+      "peak": -7.9,
+      "marginOverEngine": 13.4
     },
     "shed": {
-      "maxWin": -22.5,
-      "peak": -13.8,
-      "marginOverEngine": 1.1
+      "maxWin": -17.3,
+      "peak": -6.1,
+      "marginOverEngine": 12.8
     },
     "bank": {
-      "maxWin": -23.2,
-      "peak": -13.8,
-      "marginOverEngine": 0.4
+      "maxWin": -16.8,
+      "peak": -8.9,
+      "marginOverEngine": 13.3
     },
     "coin": {
-      "maxWin": -23.1,
-      "peak": -14.1,
-      "marginOverEngine": 0.5
+      "maxWin": -20.9,
+      "peak": -10.7,
+      "marginOverEngine": 9.2
     },
     "full": {
-      "maxWin": -22.6,
-      "peak": -13.4,
-      "marginOverEngine": 1
+      "maxWin": -20.1,
+      "peak": -11.1,
+      "marginOverEngine": 10
     },
     "land": {
-      "maxWin": -16.3,
-      "peak": -8.5,
-      "marginOverEngine": 7.3
+      "maxWin": -15.5,
+      "peak": -9.3,
+      "marginOverEngine": 14.6
     },
     "impact": {
-      "maxWin": -13.3,
-      "peak": -7.7,
-      "marginOverEngine": 10.3
+      "maxWin": -14.8,
+      "peak": -7.3,
+      "marginOverEngine": 15.3
     },
     "squish": {
-      "maxWin": -21.1,
-      "peak": -13.4,
-      "marginOverEngine": 2.5
+      "maxWin": -18.3,
+      "peak": -8.7,
+      "marginOverEngine": 11.8
     },
     "nearMiss": {
       "maxWin": -22.1,
-      "peak": -13.5,
-      "marginOverEngine": 1.5
+      "peak": -14.6,
+      "marginOverEngine": 8
     }
   }
 }

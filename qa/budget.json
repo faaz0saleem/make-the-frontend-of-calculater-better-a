@@ -1,11 +1,11 @@
 {
   "dir": "dist",
   "fileCount": 12,
-  "totalBytes": 1059430,
-  "initialBytes": 993330,
-  "totalMB": 1.01,
-  "initialMB": 0.947,
-  "gzipTotalMB": 0.352,
+  "totalBytes": 1101085,
+  "initialBytes": 1034986,
+  "totalMB": 1.05,
+  "initialMB": 0.987,
+  "gzipTotalMB": 0.365,
   "checks": {
     "total_le_250MB": true,
     "files_le_1500": true,
@@ -21,9 +21,9 @@
   },
   "files": [
     {
-      "path": "assets/index-CP98zHgD.js",
-      "bytes": 919977,
-      "gz": 251461
+      "path": "assets/index-B1uxoTSj.js",
+      "bytes": 961634,
+      "gz": 264675
     },
     {
       "path": "assets/index-B6ZB0W4i.css",
@@ -67,8 +67,8 @@
     },
     {
       "path": "index.html",
-      "bytes": 1292,
-      "gz": 647
+      "bytes": 1291,
+      "gz": 644
     },
     {
       "path": "licenses/three.js-MIT.txt",
@@ -77,8 +77,8 @@
     },
     {
       "path": "licenses/README.txt",
-      "bytes": 316,
-      "gz": 246
+      "bytes": 315,
+      "gz": 244
     }
   ]
 }
