@@ -12,11 +12,16 @@ attribute vec3 aColor;
 varying float vAlpha;
 varying vec3 vColor;
 uniform float uScale;
+uniform float uMaxPx;
 void main() {
-  vAlpha = aAlpha;
-  vColor = aColor;
   vec4 mv = modelViewMatrix * vec4(position, 1.0);
-  gl_PointSize = aSize * uScale / max(0.1, -mv.z);
+  float depth = -mv.z;
+  // Fade out anything that drifts right up to the lens (exhaust and dust left behind by the truck
+  // fly back past the chase camera) and cap the on-screen size, so no particle can ever become a
+  // translucent sheet over the truck or the screen.
+  vAlpha = aAlpha * smoothstep(2.0, 5.0, depth);
+  vColor = aColor;
+  gl_PointSize = min(aSize * uScale / max(0.1, depth), uMaxPx);
   gl_Position = projectionMatrix * mv;
 }`;
 const FRAG = /* glsl */ `
@@ -27,9 +32,14 @@ void main() {
   vec4 t = texture2D(uMap, gl_PointCoord);
   if (t.a * vAlpha < 0.01) discard;
   gl_FragColor = vec4(vColor * t.rgb, t.a * vAlpha);
+  // same output transform as the lit scene: without it, presets that draw straight to the screen
+  // (Low/Medium) showed every particle in raw linear colour, i.e. muddy dark dust and grey smoke
+  #include <tonemapping_fragment>
+  #include <colorspace_fragment>
 }`;
 
-export type ParticleKind = 'dust' | 'spark' | 'confetti' | 'sparkle' | 'splash' | 'smoke';
+/** `exhaust` and `trail` are the subtle continuous wisps (tailpipe, wheel dust); the rest are event bursts. */
+export type ParticleKind = 'dust' | 'spark' | 'confetti' | 'sparkle' | 'splash' | 'smoke' | 'exhaust' | 'trail';
 
 export class Particles {
   readonly points: THREE.Points;
@@ -43,6 +53,8 @@ export class Particles {
   private maxLife: Float32Array;
   private grow: Float32Array;
   private grav: Float32Array;
+  /** per-particle opacity ceiling (wisps stay faint, bursts can be solid) */
+  private amax: Float32Array;
   private next = 0;
   private geo: THREE.BufferGeometry;
   enabled = true;
@@ -59,6 +71,7 @@ export class Particles {
     this.maxLife = new Float32Array(capacity);
     this.grow = new Float32Array(capacity);
     this.grav = new Float32Array(capacity);
+    this.amax = new Float32Array(capacity);
     this.geo = new THREE.BufferGeometry();
     this.geo.setAttribute('position', new THREE.BufferAttribute(this.pos, 3).setUsage(THREE.DynamicDrawUsage));
     this.geo.setAttribute('aColor', new THREE.BufferAttribute(this.col, 3).setUsage(THREE.DynamicDrawUsage));
@@ -66,7 +79,7 @@ export class Particles {
     this.geo.setAttribute('aAlpha', new THREE.BufferAttribute(this.alpha, 1).setUsage(THREE.DynamicDrawUsage));
     const mat = new THREE.ShaderMaterial({
       vertexShader: VERT, fragmentShader: FRAG, transparent: true, depthWrite: false,
-      uniforms: { uMap: { value: TEX.dot }, uScale: { value: 400 } },
+      uniforms: { uMap: { value: TEX.dot }, uScale: { value: 400 }, uMaxPx: { value: 200 } },
     });
     this.points = new THREE.Points(this.geo, mat);
     this.points.frustumCulled = false;
@@ -74,7 +87,10 @@ export class Particles {
   }
 
   setViewport(heightPx: number): void {
-    (this.points.material as THREE.ShaderMaterial).uniforms.uScale.value = heightPx * 0.9;
+    const u = (this.points.material as THREE.ShaderMaterial).uniforms;
+    u.uScale.value = heightPx * 0.9;
+    // a single particle never covers more than about a fifth of the screen height
+    u.uMaxPx.value = Math.max(24, heightPx * 0.22);
   }
 
   get capacity(): number {
@@ -100,7 +116,7 @@ export class Particles {
       this.pos[i * 3 + 1] = y + Math.random() * 0.2;
       this.pos[i * 3 + 2] = z + r() * 0.3 * sp;
       let vx = (opts.vx ?? 0), vy = (opts.vy ?? 0), vz = (opts.vz ?? 0);
-      let life = 1, size = 0.5, grow = 0, grav = 0;
+      let life = 1, size = 0.5, grow = 0, grav = 0, amax = 0.85;
       switch (kind) {
         case 'dust':
           c.setHex(opts.color ?? 0xd9b48a);
@@ -111,6 +127,18 @@ export class Particles {
           c.setHex(opts.color ?? 0x9aa0aa);
           vx += r() * 0.6; vy += 0.8 + Math.random(); vz += r() * 0.6;
           life = 1.2 + Math.random() * 0.6; size = 0.9; grow = 1.6; grav = -0.6;
+          break;
+        case 'exhaust':
+          // a faint, small, quickly gone puff: reads as a running engine, never as a cloud
+          c.setHex(opts.color ?? 0xd6dae2);
+          vx += r() * 0.25; vy += 0.35 + Math.random() * 0.3; vz += r() * 0.25;
+          life = 0.28 + Math.random() * 0.14; size = 0.12 + Math.random() * 0.05; grow = 0.5; grav = -0.4; amax = 0.3;
+          break;
+        case 'trail':
+          // low wheel dust left on the road behind the truck
+          c.setHex(opts.color ?? 0xd9b48a);
+          vx += r() * 0.5; vy += 0.2 + Math.random() * 0.4; vz += r() * 0.5;
+          life = 0.38 + Math.random() * 0.2; size = 0.22 + Math.random() * 0.12; grow = 0.6; grav = -0.1; amax = 0.38;
           break;
         case 'spark':
           c.setHex(opts.color ?? 0xffd36b);
@@ -143,6 +171,7 @@ export class Particles {
       this.maxLife[i] = life;
       this.grow[i] = grow;
       this.grav[i] = grav;
+      this.amax[i] = amax;
     }
   }
 
@@ -162,7 +191,7 @@ export class Particles {
       this.pos[i * 3 + 2] += this.vel[i * 3 + 2] * dt;
       this.size[i] = Math.max(0.02, this.size[i] + this.grow[i] * dt);
       const t = this.life[i] / this.maxLife[i];
-      this.alpha[i] = Math.max(0, Math.min(0.85, t * 1.4));
+      this.alpha[i] = Math.max(0, Math.min(this.amax[i], t * 1.4));
     }
     const g = this.geo;
     (g.getAttribute('position') as THREE.BufferAttribute).needsUpdate = true;

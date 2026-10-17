@@ -51,6 +51,16 @@ interface ChunkView {
   minElev: number;
   /** moving roadside life anchored in this chunk (chunk-local render space) */
   ambient: AmbientSpawn[];
+  /** route plates hanging over the road (they roll up once the truck is under them) */
+  roadSigns: RoadSign[];
+}
+
+interface RoadSign {
+  mesh: THREE.Mesh;
+  s: number;
+  /** top edge height of the plate (chunk-local) */
+  top: number;
+  scale: number;
 }
 
 const _pose = {} as Pose;
@@ -64,7 +74,9 @@ const UP = new THREE.Vector3(0, 1, 0);
 // Instanced obstacle geometry, cached per detail level (built inside withLowDetail on Low).
 const coneGeos = new Map<boolean, THREE.BufferGeometry>();
 const crateGeos = new Map<boolean, THREE.BufferGeometry>();
-let coinGeo: THREE.BufferGeometry | null = null;
+const coinGeos = new Map<boolean, THREE.BufferGeometry>();
+const _eul = new THREE.Euler(0, 0, 0, 'YXZ');
+const TAU = Math.PI * 2;
 const ringGeo = new THREE.RingGeometry(0.75, 0.95, 28);
 const blobGeo = new THREE.PlaneGeometry(1, 1);
 const signGeo = new THREE.PlaneGeometry(1.25, 1.25);
@@ -95,13 +107,37 @@ function getCrateGeo(): THREE.BufferGeometry {
   return crateGeo;
 }
 
-export function getCoinGeo(): THREE.BufferGeometry {
-  if (!coinGeo) {
-    const g = new THREE.CylinderGeometry(0.34, 0.34, 0.09, 20);
-    g.rotateX(Math.PI / 2);
-    coinGeo = g;
+/**
+ * A crisp minted coin: raised bright rim, recessed deeper-gold face and an embossed star on both
+ * sides, flat-shaded so each surface catches the light cleanly. Face normal along local ±Z; the
+ * star points up local +Y. One vertex-coloured geometry, drawn instanced (one draw call for all coins).
+ */
+export function getCoinGeo(low = false): THREE.BufferGeometry {
+  let g = coinGeos.get(low);
+  if (g) return g;
+  const segs = low ? 16 : 26;
+  const R = 0.38, RI = 0.3, RF = 0.285, T = 0.055, F = 0.034;
+  // profile ordered bottom -> outside -> top so LatheGeometry winds the faces outward
+  const lathe = (pts: [number, number][]): THREE.BufferGeometry => {
+    const lg = new THREE.LatheGeometry(pts.map(([x, y]) => new THREE.Vector2(x, y)), segs).toNonIndexed();
+    lg.computeVertexNormals(); // non-indexed: flat facets, hard rim edges
+    return lg;
+  };
+  const k = new Kit();
+  const flat = { rx: Math.PI / 2 }; // lathe axis (Y) -> coin axis (Z)
+  k.add(lathe([[0, -F], [RF, -F]]), 0xeea21c, 0, 0, 0, flat);
+  k.add(lathe([[RF, -F], [RI, -T], [R - 0.012, -T], [R, -T + 0.014], [R, T - 0.014], [R - 0.012, T], [RI, T], [RF, F]]), 0xffcd3a, 0, 0, 0, flat);
+  k.add(lathe([[RF, F], [0, F]]), 0xeea21c, 0, 0, 0, flat);
+  const star: [number, number][] = [];
+  for (let i = 0; i < 10; i++) {
+    const a = Math.PI / 2 + (i * Math.PI) / 5;
+    const r = i % 2 ? 0.078 : 0.18;
+    star.push([Math.cos(a) * r, Math.sin(a) * r]);
   }
-  return coinGeo;
+  k.shape(star, (F + 0.013) * 2, 0xffe48a); // stands 13 mm proud of each face, inside the rim
+  g = k.build();
+  coinGeos.set(low, g);
+  return g;
 }
 
 export class WorldView {
@@ -133,6 +169,7 @@ export class WorldView {
 
   setQuality(q: WorldQuality): void {
     this.quality = q;
+    this.coinMesh.geometry = getCoinGeo(q.sceneryDensity < 0.5);
     this.ambient.setTier(q.sceneryDensity < 0.5 ? 0 : q.sceneryDensity < 0.9 ? 1 : 2, q.sceneryDensity < 0.5);
   }
 
@@ -192,7 +229,7 @@ export class WorldView {
     const ax = _pose.x, az = _pose.z;
     const group = new THREE.Group();
     group.position.set(ax - this.originX, 0, az - this.originZ);
-    const view: ChunkView = { serial: pc.serial, group, pickups: [], movers: [], coins: [], cones: null, crates: null, world: pc.world, minElev: Infinity, ambient: [] };
+    const view: ChunkView = { serial: pc.serial, group, pickups: [], movers: [], coins: [], cones: null, crates: null, world: pc.world, minElev: Infinity, ambient: [], roadSigns: [] };
     // Separate generator for decoration added later, so the original layout stays exactly the same.
     const arng = new Rng(pc.serial * 104729 + pc.world * 977 + Math.round(pc.s0) + 17);
     const ctx = new ChunkCtx(track, ax, az, theme, rng, this.quality, arng);
@@ -211,6 +248,7 @@ export class WorldView {
       for (const f of pc.features) this.addFeature(ctx, view, track, f, pc);
     });
     view.ambient = ctx.ambient;
+    view.roadSigns = ctx.roadSigns;
     // ---------------- assemble merged meshes
     const stat = ctx.kit.build();
     const mesh = new THREE.Mesh(stat, MAT.scenery);
@@ -471,16 +509,26 @@ export class WorldView {
     this.time += dt;
     // Coins: rebuild instance list from active chunks (cheap: a few hundred matrices)
     let n = 0;
-    const spin = this.time * 3.2;
+    const t = this.time;
     const camPos = cam.position;
     for (const c of this.chunks.values()) {
       for (const f of c.coins) {
         if (f.collected || f.s < truckS - 6 || f.s > truckS + 170) continue;
         if (n >= 700) break;
-        this.toWorld(track, f.s, f.x, 0.75 + Math.sin(this.time * 4 + f.id) * 0.06, _v);
-        if (_v.distanceToSquared(camPos) > 200 * 200) continue;
-        _q.setFromAxisAngle(UP, spin + f.id * 0.3);
-        _m4.compose(_v, _q, _sc.set(1, 1, 1));
+        this.toWorld(track, f.s, f.x, 0.75 + Math.sin(t * 4 + f.id) * 0.06, _v);
+        const dx = camPos.x - _v.x, dy = camPos.y - _v.y, dz = camPos.z - _v.z;
+        const hd = Math.hypot(dx, dz);
+        if (hd * hd + dy * dy > 200 * 200) continue;
+        // Coins turn their face to the camera (a line of them reads as a trail of discs, never as an
+        // edge-on lumpy column), rock gently, and do a quick full flip that ripples down each line.
+        const ph = (((t * 0.45 - f.s * 0.03) % 1) + 1) % 1;
+        const u = ph > 0.74 ? (ph - 0.74) / 0.26 : 0;
+        const flip = u * u * (3 - 2 * u) * TAU;
+        _eul.set(-Math.atan2(dy, hd) * 0.85, Math.atan2(dx, dz) + flip + Math.sin(t * 2.3 + f.id) * 0.32, 0);
+        _q.setFromEuler(_eul);
+        // grow in over the last 20 m of draw distance instead of popping into view
+        const grow = Math.min(1, (truckS + 170 - f.s) / 20);
+        _m4.compose(_v, _q, _sc.setScalar(grow));
         this.coinMesh.setMatrixAt(n++, _m4);
       }
       for (const p of c.pickups) {
@@ -494,6 +542,16 @@ export class WorldView {
         const pulse = 1 + Math.sin(this.time * 5 + p.phase) * 0.08;
         p.ring.scale.setScalar(f.touched ? 0.6 : pulse);
         (p.ring.material as THREE.MeshBasicMaterial).opacity = 0.55;
+      }
+      // Overhead route plates hang right where the chase camera passes with a tall stack, so once the
+      // truck is under one it rolls up into its gantry instead of filling the screen.
+      for (const rs of c.roadSigns) {
+        const k = Math.min(1, Math.max(0, 1 - (truckS - rs.s - 0.4) / 2.2));
+        const e = k * k * (3 - 2 * k);
+        rs.mesh.visible = e > 0.01;
+        if (!rs.mesh.visible) continue;
+        rs.mesh.scale.set(rs.scale, rs.scale * e, rs.scale);
+        rs.mesh.position.y = rs.top - 0.625 * rs.scale * e;
       }
       for (const m of c.movers) {
         const f = m.feature;
@@ -611,6 +669,7 @@ class ChunkCtx {
   puddles = new Kit();
   roofRoad = new Kit();
   signs: THREE.Mesh[] = [];
+  roadSigns: RoadSign[] = [];
   gantries = new Set<number>();
   glowPts: number[] = [];
   minElev = Infinity;
@@ -1335,7 +1394,10 @@ class ChunkCtx {
     const m = new THREE.Mesh(signGeo, signMaterial(label));
     m.position.set(q.x, q.y + (inRoad ? 5.3 : 2.45), q.z);
     m.rotation.y = -pose.heading;
-    if (inRoad) m.scale.setScalar(1.5);
+    if (inRoad) {
+      m.scale.setScalar(1.5);
+      this.roadSigns.push({ mesh: m, s: f.s, top: m.position.y + 0.625 * 1.5, scale: 1.5 });
+    }
     this.signs.push(m);
   }
 

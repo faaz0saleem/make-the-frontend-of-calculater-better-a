@@ -4,7 +4,7 @@ import type { PaintDef } from '../data/cosmetics';
 import type { VehicleKind } from '../data/vehicles';
 import type { DetachedItem, StackItem, TruckSim } from '../sim/truck';
 import { itemHeight } from '../sim/truck';
-import { MAT, TEX } from './materials';
+import { MAT } from './materials';
 import { makeCargoMesh, setCargoShape } from './models/cargo';
 import { buildTruck, type TruckModel } from './models/truck';
 
@@ -37,7 +37,7 @@ export class TruckView {
 
   constructor(scene: THREE.Scene) {
     scene.add(this.group);
-    const bm = new THREE.MeshBasicMaterial({ map: TEX.blob, transparent: true, depthWrite: false, opacity: 0.9 });
+    const bm = new THREE.MeshBasicMaterial({ map: contactShadowTexture(), transparent: true, depthWrite: false, opacity: 0.9 });
     this.blob = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), bm);
     this.blob.rotation.x = -Math.PI / 2;
     this.blob.renderOrder = 2;
@@ -142,8 +142,8 @@ export class TruckView {
     this.blob.position.set(pos.x, pos.y - tr.y + 0.025, pos.z);
     this.blob.rotation.z = yaw;
     const air = Math.min(1, tr.y / 3);
-    this.blob.scale.set(m.anchors.width * 1.5 * (1 + air * 0.4), (Math.abs(m.anchors.frontZ) + m.anchors.rearZ) * 1.25, 1);
-    (this.blob.material as THREE.MeshBasicMaterial).opacity = 0.85 * (1 - air * 0.6);
+    this.blob.scale.set(m.anchors.width * 1.38 * (1 + air * 0.4), (Math.abs(m.anchors.frontZ) + m.anchors.rearZ) * 1.16 * (1 + air * 0.2), 1);
+    (this.blob.material as THREE.MeshBasicMaterial).opacity = 0.9 * (1 - air * 0.6);
     // warning marker over a wobbling stack
     const danger = Math.max(topRatio, Math.abs(tr.tip) / 1.0);
     this.warn.visible = danger > 0.72 && tr.itemCount > 0;
@@ -247,6 +247,35 @@ export class TruckView {
     this.blob.visible = v;
     if (!v) this.warn.visible = false;
   }
+}
+
+/**
+ * Soft rounded-rectangle contact shadow (the truck's footprint): dark under the body, fading just past
+ * the wheels. Grounds the truck on every preset, including Low where there are no real shadows.
+ */
+function contactShadowTexture(): THREE.CanvasTexture {
+  const S = 64;
+  const c = document.createElement('canvas');
+  c.width = c.height = S;
+  const g = c.getContext('2d')!;
+  const img = g.createImageData(S, S);
+  const hx = 0.6, hy = 0.66, rad = 0.28;
+  for (let j = 0; j < S; j++) {
+    for (let i = 0; i < S; i++) {
+      const u = Math.abs(((i + 0.5) / S) * 2 - 1), v = Math.abs(((j + 0.5) / S) * 2 - 1);
+      const qx = Math.max(u - hx + rad, 0), qy = Math.max(v - hy + rad, 0);
+      const d = Math.hypot(qx, qy) + Math.min(Math.max(u - hx + rad, v - hy + rad), 0) - rad;
+      const e = Math.min(1, Math.max(0, (d + 0.2) / 0.52));
+      const a = 0.62 * (1 - e * e * (3 - 2 * e));
+      const o = (j * S + i) * 4;
+      img.data[o] = img.data[o + 1] = img.data[o + 2] = 0;
+      img.data[o + 3] = Math.round(a * 255);
+    }
+  }
+  g.putImageData(img, 0, 0);
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  return t;
 }
 
 function warnTexture(): THREE.CanvasTexture {
