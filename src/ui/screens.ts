@@ -5,6 +5,7 @@ import { CARGO, CARGO_IDS, isFragile } from '../data/cargo';
 import { ECONOMY } from '../data/economy';
 import { LEVELS, LEVEL_BY_ID, WORLD_NAMES, careLabel, routeLabel, type LevelDef } from '../data/levels';
 import { VEHICLES } from '../data/vehicles';
+import { careProgress, routeProgress, type MedalResult } from '../modes/campaign';
 import type { DailySpec } from '../modes/daily';
 import type { Game, UiBridge } from '../game/game';
 import type { Reward, RunSummary } from '../progression/rewards';
@@ -14,6 +15,29 @@ import { ICONS } from './icons';
 import { openGarage, type GarageHandle } from './garage';
 
 const MEDAL_NAMES = ['Delivery', 'Route', 'Care'];
+
+/** A medal badge: the coloured medal when earned, a dashed "not yet" outline when not. */
+function medalBadge(i: number, got: boolean, size: 'big' | 'xl' = 'big'): HTMLElement {
+  return h('div', { class: `medal ${size} m${i} ${got ? 'on' : 'off'}`, html: ICONS.medal, role: 'img', 'aria-label': `${MEDAL_NAMES[i]} medal${got ? ' earned' : ' not earned yet'}` });
+}
+
+const medalGoal = (lv: LevelDef, i: number): string =>
+  i === 0 ? `Deliver cargo worth ${fmt(lv.objectives.target)}+` : i === 1 ? routeLabel(lv.objectives.route) : careLabel(lv.objectives.care);
+
+/** Short progress text for one medal goal ("14 / 20", "Lost 1", "No sheds"). */
+function medalProgress(lv: LevelDef, i: number, m: MedalResult): string {
+  if (i === 0) return `${fmt(m.deliveredValue)} / ${fmt(lv.objectives.target)}`;
+  if (i === 1) {
+    const k = lv.objectives.route.kind;
+    if (k === 'noShed') return m.routeValue === 0 ? 'No sheds' : `Shed ${m.routeValue}`;
+    if (k === 'noScrape') return m.routeValue === 0 ? 'No scrapes' : `Scraped ${m.routeValue}×`;
+    return `${fmt(Math.min(m.routeValue, m.routeNeed))} / ${fmt(m.routeNeed)}`;
+  }
+  const c = lv.objectives.care;
+  if (c.kind === 'lostMax') return `Lost ${m.careValue}`;
+  if (c.kind === 'intactPct') return `${m.careValue}% intact`;
+  return `${fmt(Math.min(m.careValue, m.careNeed))} / ${fmt(m.careNeed)}`;
+}
 
 export class UiRoot implements UiBridge {
   readonly root: HTMLElement;
@@ -118,7 +142,7 @@ export class UiRoot implements UiBridge {
     return h('div', { class: 'layer screen-dim light fade-in', 'data-testid': 'screen-title' },
       h('div', { class: 'title-wrap' },
         h('div', { class: 'logo' }, 'OVER', h('b', null, 'LOADED!'), h('small', null, 'TALL-STACK DELIVERY')),
-        h('div', { class: 'col', style: 'align-items:center' }, start, h('div', { class: 'start-hint' }, 'First delivery · about 40 seconds'))));
+        h('div', { class: 'col', style: 'align-items:center' }, start, h('div', { class: 'start-hint' }, 'First delivery · about 30 seconds'))));
   }
 
   // ------------------------------------------------------------------ hub
@@ -180,7 +204,7 @@ export class UiRoot implements UiBridge {
       const idx = lv.num - (lv.world - 1) * 10;
       const medals = h('div', { class: 'medals' }, ...[0, 1, 2].map((i) => h('i', { class: `medal m${i} ${rec?.medals[i] ? 'on' : ''}` })));
       const b = h('button', { class: `lvl ${unlocked ? '' : 'locked'} ${lv.id === nextId && unlocked ? 'next' : ''} ${idx === 10 ? 'finale' : ''}`, type: 'button', 'data-testid': `lvl-${lv.id}`, 'aria-label': `${lv.name}${unlocked ? '' : ' (locked)'}` },
-        unlocked ? h('div', { class: 'num' }, String(idx)) : icon('lock'), h('div', { class: 'nm' }, lv.name), medals);
+        unlocked ? h('div', { class: 'num' }, String(idx)) : h('span', { class: 'lock-ico', html: ICONS.lock }), h('div', { class: 'nm' }, lv.name), unlocked ? medals : null);
       b.addEventListener('click', () => {
         if (!unlocked) {
           g.audio.play('error');
@@ -200,10 +224,9 @@ export class UiRoot implements UiBridge {
   }
 
   // ------------------------------------------------------------------ briefing
-  private reqRow(i: number, label: string, got: boolean): HTMLElement {
-    const m = h('div', { class: `medal big m${i} ${got ? 'on' : ''}` });
-    m.innerHTML = got ? ICONS.check : '';
-    return h('div', { class: 'req' }, m, h('div', { class: 'lbl' }, h('b', null, `${MEDAL_NAMES[i]}: `), label), h('div', { class: 'st' }, got ? 'Earned' : ''));
+  private reqRow(i: number, label: string, got: boolean, status?: string): HTMLElement {
+    const st = got ? h('span', { class: 'tag mint' }, 'Earned') : status ? h('span', { class: 'st-prog' }, status) : null;
+    return h('div', { class: `req ${got ? 'got' : ''}` }, medalBadge(i, got), h('div', { class: 'lbl' }, h('b', null, `${MEDAL_NAMES[i]}: `), label), h('div', { class: 'st' }, st));
   }
 
   private briefing(lv: LevelDef): HTMLElement {
@@ -220,12 +243,9 @@ export class UiRoot implements UiBridge {
         h('h2', null, lv.name),
         h('p', { style: 'margin:.2em 0 .6em' }, lv.intro),
         h('div', { class: 'sheet-body', style: 'padding:0' },
-          this.reqRow(0, `Deliver cargo worth ${fmt(lv.objectives.target)}+`, !!rec?.medals[0]),
-          this.reqRow(1, routeLabel(lv.objectives.route), !!rec?.medals[1]),
-          this.reqRow(2, careLabel(lv.objectives.care), !!rec?.medals[2]),
-          h('p', { class: 'muted', style: 'font-size:.85em' }, rec?.done ? `Best delivery: ${fmt(rec.bestValue)} · plays: ${rec.plays}` : 'Medals are optional. Reaching the depot completes the delivery.'),
-          h('p', { class: 'muted', style: 'font-size:.85em' }, `Truck: ${eq.name} · Spare tires: ${g.store.data.tokens}`)),
-        h('div', { class: 'row end', style: 'margin-top:.6em' },
+          ...[0, 1, 2].map((i) => this.reqRow(i, medalGoal(lv, i), !!rec?.medals[i])),
+          h('p', { class: 'muted brief-note' }, rec?.done ? `Best delivery: ${fmt(rec.bestValue)} · plays: ${rec.plays}` : 'Medals are optional: reaching the depot completes the delivery.', h('br'), `Truck: ${eq.name} · Spare tires: ${g.store.data.tokens}`)),
+        h('div', { class: 'row end brief-actions', style: 'margin-top:.6em' },
           btn({ cls: 'cream', icon: 'back', label: 'Back', onClick: () => { this.click(); g.goState('levelSelect'); this.show('levelSelect', lv.world); } }),
           btn({ cls: 'cream', icon: 'garage', label: 'Garage', onClick: () => { this.click(); g.goState('garage'); this.show('garage', { back: () => { g.goState('briefing'); this.show('briefing', lv.id); } }); } }),
           start)));
@@ -259,16 +279,35 @@ export class UiRoot implements UiBridge {
     resume.setAttribute('data-autofocus', '');
     const req = g.req;
     const lv = req?.levelId ? LEVEL_BY_ID[req.levelId] : null;
+    let goals: HTMLElement;
+    if (lv) {
+      // Medal goals with live progress, so a pause doubles as a quick "how am I doing?".
+      const rec = g.store.data.campaign.levels[lv.id];
+      const run = g.run;
+      const status = (i: number): string | undefined => {
+        if (!run) return undefined;
+        if (i === 0) return `${fmt(run.cargoValue)} on board`;
+        // Goals counted at the depot (deliveries, intact %) have nothing live to show yet.
+        if (i === 1 && lv.objectives.route.kind === 'deliverType') return undefined;
+        if (i === 2 && lv.objectives.care.kind !== 'lostMax') return undefined;
+        const r = i === 1 ? routeProgress(lv.objectives.route, run.stats) : careProgress(lv.objectives.care, run.stats);
+        const m: MedalResult = { delivery: false, route: false, care: false, deliveredValue: 0, routeValue: r.value, routeNeed: r.need, careValue: r.value, careNeed: r.need };
+        return medalProgress(lv, i, m);
+      };
+      goals = h('div', null, h('h3', { class: 'pause-sub' }, `${WORLD_NAMES[lv.world]} ${lv.num - (lv.world - 1) * 10} · ${lv.name}`),
+        ...[0, 1, 2].map((i) => this.reqRow(i, medalGoal(lv, i), !!rec?.medals[i], status(i))));
+    } else goals = h('p', null, req?.mode === 'daily' ? 'Daily Contract: no continues today.' : 'Bank cargo at depots to keep it safe.');
     return h('div', { class: 'layer center screen-dim fade-in', 'data-testid': 'screen-pause' },
       h('div', { class: 'sheet brief panel pop-in' },
         h('h2', null, 'Paused'),
-        lv ? h('div', null, this.reqRow(0, `Deliver cargo worth ${fmt(lv.objectives.target)}+`, false), this.reqRow(1, routeLabel(lv.objectives.route), false), this.reqRow(2, careLabel(lv.objectives.care), false)) : h('p', null, req?.mode === 'daily' ? 'Daily Contract: no continues today.' : 'Bank cargo at depots to keep it safe.'),
-        h('div', { class: 'row center', style: 'margin-top:.6em' },
+        goals,
+        h('div', { class: 'pause-actions' },
           resume,
-          btn({ cls: 'cream', icon: 'retry', label: 'Restart', testid: 'btn-restart', onClick: () => { this.click(); g.restartRun(); } }),
-          btn({ cls: 'cream', icon: 'gear', label: 'Settings', onClick: () => { this.click(); this.settingsReturn = 'paused'; g.goState('settings'); this.show('settings'); } }),
-          btn({ cls: 'cream', icon: 'home', label: 'Quit', testid: 'btn-quit', onClick: () => { this.click(); g.quitToMenu(); } })),
-        h('p', { class: 'muted', style: 'font-size:.8em;text-align:center' }, 'Quitting keeps road coins you collected; cargo on board is lost.')));
+          h('div', { class: 'pause-more' },
+            btn({ cls: 'cream', icon: 'retry', label: 'Restart', testid: 'btn-restart', onClick: () => { this.click(); g.restartRun(); } }),
+            btn({ cls: 'cream', icon: 'gear', label: 'Settings', onClick: () => { this.click(); this.settingsReturn = 'paused'; g.goState('settings'); this.show('settings'); } }),
+            btn({ cls: 'cream', icon: 'home', label: 'Quit', testid: 'btn-quit', onClick: () => { this.click(); g.quitToMenu(); } }))),
+        h('p', { class: 'muted', style: 'font-size:.8em;text-align:center;margin-bottom:0' }, 'Quitting keeps road coins you collected; cargo on board is lost.')));
   }
 
   // ------------------------------------------------------------------ crash
@@ -317,33 +356,61 @@ export class UiRoot implements UiBridge {
     const finished = summary.outcome === 'finished';
     const lv = summary.levelId ? LEVEL_BY_ID[summary.levelId] : null;
     const title = finished ? (summary.mode === 'daily' ? 'Contract complete!' : 'Delivered!') : summary.mode === 'endless' ? 'Run over' : summary.outcome === 'quit' ? 'Run ended' : 'Crashed';
+    // Coin lines stay a short list: first-time medal bonuses fold into one line (the medal cards
+    // above show which), and achievements/contracts become chips, so nothing has to scroll.
     const lines = h('div', { class: 'lines', 'data-testid': 'result-lines' });
-    reward.lines.forEach((l, i) => {
-      const amt = h('span', { class: 'amt' }, l.amount >= 0 ? `+${fmt(l.amount)}` : `−${fmt(-l.amount)}`);
-      const row = h('div', { class: `line k-${l.kind}` }, h('span', null, l.label), amt);
-      row.style.animation = `popIn .25s ${0.08 * i}s both`;
-      lines.append(row);
-    });
+    const unlocks = h('div', { class: 'unlocks', 'data-testid': 'result-unlocks' });
+    const medalBonus = reward.lines.filter((l) => l.kind === 'medal');
+    let row = 0;
+    for (const l of reward.lines) {
+      if (l.kind === 'achievement' || l.kind === 'contract') {
+        const name = l.label.replace(/^(Achievement|Contract): /, '');
+        const chip = h('span', { class: `unlock k-${l.kind}`, title: l.label }, icon(l.kind === 'achievement' ? 'trophy' : 'goals'), h('span', { class: 'u-name' }, name), h('b', null, `+${fmt(l.amount)}`));
+        chip.style.animationDelay = `${0.6 + 0.1 * unlocks.childElementCount}s`;
+        unlocks.append(chip);
+        continue;
+      }
+      if (l.kind === 'medal' && l !== medalBonus[0]) continue;
+      const label = l.kind === 'medal' && medalBonus.length > 1 ? `First-time medals ×${medalBonus.length}` : l.label;
+      const amount = l.kind === 'medal' ? medalBonus.reduce((a, m) => a + m.amount, 0) : l.amount;
+      const amt = h('span', { class: 'amt' }, amount >= 0 ? `+${fmt(amount)}` : `−${fmt(-amount)}`);
+      const el = h('div', { class: `line k-${l.kind}` }, h('span', null, label), amt);
+      el.style.animation = `popIn .25s ${0.08 * row++}s both`;
+      lines.append(el);
+    }
     if (reward.lines.length === 0) lines.append(h('div', { class: 'line' }, h('span', null, 'No coins this time'), h('span', { class: 'amt' }, '0')));
+    // If it still overflows (tiny screens), fade the bottom edge so it reads as "scroll for more".
+    const fadeCheck = () => lines.classList.toggle('more', lines.scrollTop + lines.clientHeight < lines.scrollHeight - 2);
+    lines.addEventListener('scroll', fadeCheck, { passive: true });
+    lines.addEventListener('animationend', fadeCheck);
+    // (re-checked once the rows' pop-in has settled: their transforms briefly add overflow)
+    setTimeout(fadeCheck, 80 * row + 450);
     const totalAmt = h('span', { 'data-testid': 'result-total' }, '0');
     this.countUp(totalAmt, reward.total);
     const medals = lv && reward.medals ? h('div', { class: 'medal-row' }, ...[0, 1, 2].map((i) => {
-      const got = [reward.medals!.delivery, reward.medals!.route, reward.medals!.care][i];
-      const prev = g.store.data.campaign.levels[lv.id]?.medals[i];
-      const req = i === 0 ? `${fmt(reward.medals!.deliveredValue)} / ${fmt(lv.objectives.target)}` : i === 1 ? routeLabel(lv.objectives.route) : careLabel(lv.objectives.care);
-      const m = h('div', { class: `medal big m${i} ${got || prev ? 'on' : ''}` });
-      m.innerHTML = got || prev ? ICONS.check : '';
-      return h('div', { class: `medal-card ${got || prev ? 'got' : ''} ${reward.newMedals[i] ? 'new' : ''}` }, m, h('div', null, MEDAL_NAMES[i]), h('div', { class: 'muted', style: 'font-weight:500' }, req));
+      const m = reward.medals!;
+      const got = [m.delivery, m.route, m.care][i];
+      const prev = !!g.store.data.campaign.levels[lv.id]?.medals[i] && !reward.newMedals[i];
+      const isNew = reward.newMedals[i];
+      const status = isNew ? h('span', { class: 'tag sun' }, `NEW! +${ECONOMY.firstMedalBonus}`)
+        : got ? h('span', { class: 'tag mint' }, 'Earned')
+        : prev ? h('span', { class: 'tag' }, 'Earned before')
+        : finished ? h('span', { class: 'mc-prog' }, medalProgress(lv, i, m)) : h('span', { class: 'mc-prog dim' }, 'Finish to earn');
+      const badge = medalBadge(i, got || prev, 'xl');
+      if (got) badge.style.animationDelay = `${0.25 + 0.18 * i}s`;
+      return h('div', { class: `medal-card m${i} ${got ? 'got' : prev ? 'prev' : 'missed'} ${isNew ? 'new' : ''}`, 'data-testid': `medal-${i}` },
+        badge, h('div', { class: 'mc-name' }, MEDAL_NAMES[i]), h('div', { class: 'mc-goal' }, medalGoal(lv, i)), status);
     })) : null;
     const scoreRow = summary.mode !== 'campaign' && summary.mode !== 'tutorial' ? h('div', { class: 'row', style: 'justify-content:space-between' }, h('b', null, `Score ${fmt(reward.score)}`), h('span', { class: 'muted' }, `${fmt(summary.distance)} m`)) : null;
     const nextLv = lv ? LEVELS[lv.num] : null;
     const canNext = !!(lv && finished && nextLv && g.store.levelUnlocked(nextLv.id));
     const tutorialDone = lv?.id === 'h1' && g.store.data.tutorialDone;
-    const btns = h('div', { class: 'row center', style: 'margin-top:.7em' });
+    const btns = h('div', { class: 'res-actions' });
     // A midgame ad may run between this screen and the next one: lock the row while it does, so a
     // second tap can't navigate somewhere else and then be overridden when the ad ends.
     const lockRow = () => btns.querySelectorAll('button').forEach((b) => ((b as HTMLButtonElement).disabled = true));
-    const retry = btn({ cls: tutorialDone && finished ? 'cream' : 'mint big', icon: 'retry', label: summary.mode === 'endless' ? 'Drive again' : 'Retry', testid: 'btn-retry', onClick: async () => {
+    const hasNext = canNext || tutorialDone;
+    const retry = btn({ cls: hasNext ? 'cream' : 'mint big', icon: 'retry', label: summary.mode === 'endless' ? 'Drive again' : 'Retry', testid: 'btn-retry', onClick: async () => {
       this.click();
       lockRow();
       await g.maybeMidgame();
@@ -360,12 +427,15 @@ export class UiRoot implements UiBridge {
       g.goState('briefing');
       this.show('briefing', nextLv!.id);
     } });
-    if (canNext || tutorialDone) btns.append(next);
-    btns.append(retry);
+    // One full-width primary action (Next / Continue, or Retry), the rest in an even row under it.
+    const more = h('div', { class: 'res-more' });
+    btns.append(hasNext ? next : retry);
+    if (hasNext) more.append(retry);
     if (!tutorialDone) {
-      btns.append(btn({ cls: 'cream', icon: 'garage', label: 'Garage', testid: 'btn-res-garage', onClick: () => { this.click(); g.goState('garage'); this.show('garage', { back: () => { g.goState('results'); this.show('results', d); } }); } }));
-      btns.append(btn({ cls: 'cream', icon: 'home', label: 'Menu', testid: 'btn-res-menu', onClick: () => { this.click(); g.toMenu(); } }));
+      more.append(btn({ cls: 'cream', icon: 'garage', label: 'Garage', testid: 'btn-res-garage', onClick: () => { this.click(); g.goState('garage'); this.show('garage', { back: () => { g.goState('results'); this.show('results', d); } }); } }));
+      more.append(btn({ cls: 'cream', icon: 'home', label: 'Menu', testid: 'btn-res-menu', onClick: () => { this.click(); g.toMenu(); } }));
     }
+    if (more.childElementCount) btns.append(more);
     (btns.firstElementChild as HTMLElement | null)?.setAttribute('data-autofocus', '');
     const loss = reward.lines.find((l) => l.kind === 'loss');
     const sub = finished
@@ -375,7 +445,7 @@ export class UiRoot implements UiBridge {
       h('div', { class: 'sheet results panel pop-in' },
         h('div', { class: 'row', style: 'justify-content:space-between' }, h('h2', null, title), reward.newBest ? h('span', { class: 'badge-best', 'data-testid': 'new-best' }, 'New best!') : null),
         h('p', { class: 'sub muted' }, sub),
-        medals, scoreRow, lines,
+        medals, scoreRow, lines, unlocks.childElementCount ? unlocks : null,
         h('div', { class: 'total' }, h('span', null, 'Total'), h('span', { class: 'amt' }, icon('coin'), totalAmt)),
         h('div', { class: 'muted', style: 'font-size:.8em;text-align:right' }, `Balance: ${fmt(g.store.coins)}`),
         btns));

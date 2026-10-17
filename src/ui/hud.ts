@@ -24,12 +24,17 @@ export interface HudState {
 export class Hud {
   readonly root: HTMLDivElement;
   private coinsEl: HTMLSpanElement;
-  private cargoEl: HTMLSpanElement;
+  private cargoEl: HTMLElement;
+  private worthEl: HTMLSpanElement;
+  private slotsEl: HTMLDivElement;
+  private cargoPill: HTMLDivElement;
+  private shedWrap: HTMLDivElement;
   private riskPill: HTMLDivElement;
   private riskEl: HTMLSpanElement;
   private multPill: HTMLDivElement;
   private multEl: HTMLSpanElement;
   private progFill: HTMLElement | null = null;
+  private progTruck: HTMLElement | null = null;
   private distEl: HTMLDivElement | null = null;
   private stab: HTMLDivElement;
   private stabFill: HTMLElement;
@@ -41,15 +46,23 @@ export class Hud {
 
   constructor(parent: HTMLElement, mode: RunMode, private cb: { onPause: () => void; onShed: () => void }, touch: boolean) {
     this.coinsEl = h('span', { 'data-testid': 'hud-coins' }, '0');
-    this.cargoEl = h('span', { 'data-testid': 'hud-cargo' }, '0');
     this.riskEl = h('span', null, '0');
     this.multEl = h('span', null, '×1');
-    const coinPill = h('div', { class: 'hud-pill' }, icon('coin'), this.coinsEl);
-    const cargoPill = h('div', { class: 'hud-pill', title: 'Cargo on board and its value' }, icon('stack'), this.cargoEl);
-    this.riskPill = h('div', { class: 'hud-pill risk', title: 'Unbanked cargo value: lost if you crash' }, h('span', null, 'AT RISK'), icon('coin'), this.riskEl);
-    this.multPill = h('div', { class: 'hud-pill mult', title: 'Delivery multiplier: grows each depot you pass with cargo' }, this.multEl);
-    const tl = h('div', { class: 'tl' }, coinPill, cargoPill);
-    if (mode === 'endless' || mode === 'daily') tl.append(this.riskPill, this.multPill);
+    const coinPill = h('div', { class: 'hud-pill', title: 'Road coins collected this run' }, icon('coin'), this.coinsEl);
+    // Cargo at a glance: "CARGO 3/8" over a row of truck slots, then what the load is worth.
+    this.cargoEl = h('b', { class: 'cp-num', 'data-testid': 'hud-cargo' }, '0/0');
+    this.slotsEl = h('div', { class: 'cp-slots' });
+    this.worthEl = h('span', { 'data-testid': 'hud-worth' }, '0');
+    const banking = mode === 'endless' || mode === 'daily';
+    this.cargoPill = h('div', { class: 'hud-pill cargo-pill empty', title: 'Cargo on your truck (used / free slots) and what it pays on delivery' },
+      icon('stack'),
+      h('div', { class: 'cp-col' }, h('div', { class: 'cp-top' }, h('span', { class: 'cp-cap' }, 'CARGO'), this.cargoEl), this.slotsEl),
+      // Long Haul / Daily show the load's value as AT RISK (with the depot bonus) instead.
+      banking ? null : h('div', { class: 'cp-col cp-worth' }, h('span', { class: 'cp-cap' }, 'WORTH'), h('div', { class: 'cp-top' }, icon('coin'), this.worthEl)));
+    this.riskPill = h('div', { class: 'hud-pill risk', title: 'Unbanked cargo value: lost if you crash' }, h('span', { class: 'cp-cap' }, 'AT RISK'), icon('coin'), this.riskEl);
+    this.multPill = h('div', { class: 'hud-pill mult', title: 'Delivery multiplier: grows each depot you pass with cargo' }, h('span', { class: 'cp-cap' }, 'BONUS'), this.multEl);
+    const tl = h('div', { class: 'tl' }, coinPill, this.cargoPill);
+    if (banking) tl.append(this.riskPill, this.multPill);
     const tc = h('div', { class: 'tc' });
     if (mode === 'endless') {
       this.distEl = h('div', { class: 'hud-dist', 'data-testid': 'hud-dist' }, '0 m');
@@ -57,7 +70,9 @@ export class Hud {
     } else {
       const fill = h('i');
       this.progFill = fill;
-      tc.append(h('div', { class: 'progress', title: 'Route progress' }, fill, h('span', { class: 'flag', html: ICONS.flag })));
+      this.progTruck = h('span', { class: 'prog-truck', html: ICONS.truck });
+      tc.append(h('div', { class: 'progress-wrap', title: 'Route progress to the depot' },
+        h('div', { class: 'progress' }, fill), this.progTruck, h('span', { class: 'flag', html: ICONS.flag })));
       if (mode === 'daily') {
         this.distEl = h('div', { class: 'hud-dist' }, '0 m');
         tc.append(this.distEl);
@@ -80,7 +95,8 @@ export class Hud {
       lastPointer = performance.now();
       this.cb.onShed();
     });
-    const shedWrap = h('div', { class: 'shed-btn' }, shedB, touch ? null : h('div', { class: 'hint' }, h('span', { class: 'keycap' }, 'SPACE')));
+    const shedWrap = h('div', { class: 'shed-btn empty' }, shedB, touch ? null : h('div', { class: 'hint' }, h('span', { class: 'keycap' }, 'SPACE')));
+    this.shedWrap = shedWrap;
     this.toasts = h('div', { class: 'toast-area' });
     this.root = h('div', { class: 'hud', 'data-testid': 'hud' }, tl, tc, tr, this.stab, shedWrap, this.toasts);
     parent.append(this.root);
@@ -94,13 +110,27 @@ export class Hud {
 
   update(s: HudState): void {
     this.set('coins', s.coins, () => (this.coinsEl.textContent = fmt(s.coins)));
-    const cargo = `${s.items}/${s.capacity} · ${fmt(s.value)}`;
-    this.set('cargo', cargo, () => (this.cargoEl.textContent = cargo));
+    const cargo = `${s.items}/${s.capacity}`;
+    this.set('cargo', cargo, () => {
+      this.cargoEl.textContent = cargo;
+      const slots = this.slotsEl;
+      while (slots.childElementCount < s.capacity) slots.append(h('i'));
+      while (slots.childElementCount > s.capacity) slots.lastElementChild?.remove();
+      for (let i = 0; i < slots.childElementCount; i++) slots.children[i].className = i < s.items ? 'on' : '';
+      const full = s.items >= s.capacity && s.capacity > 0;
+      this.cargoPill.classList.toggle('empty', s.items === 0);
+      this.cargoPill.classList.toggle('full', full);
+      this.shedWrap.classList.toggle('empty', s.items === 0);
+    });
+    this.set('worth', s.value, () => (this.worthEl.textContent = fmt(s.value)));
     if (s.atRisk !== null) this.set('risk', s.atRisk, () => (this.riskEl.textContent = fmt(s.atRisk ?? 0)));
     if (s.mult !== null) this.set('mult', s.mult, () => (this.multEl.textContent = `×${(s.mult ?? 1).toFixed(2).replace(/0$/, '').replace(/\.$/, '')}`));
     if (this.progFill && s.progress !== null) {
       const p = Math.round(s.progress * 1000) / 10;
-      this.set('prog', p, () => (this.progFill!.style.width = `${p}%`));
+      this.set('prog', p, () => {
+        this.progFill!.style.width = `${p}%`;
+        this.progTruck!.style.left = `${p}%`;
+      });
     }
     if (this.distEl && s.distance !== null) {
       const d = `${fmt(s.distance)} m`;

@@ -5,6 +5,7 @@ _Generated from `src/data/levels.ts` and `src/data/chunks.ts` by `npx vitest run
 ## Principles
 
 - Every level is a hand-ordered sequence of authored road chunks (shared library) plus a level-specific cargo pool, speed ramp and objectives.
+- Every run (campaign, Long Haul, Daily) opens with cargo dead ahead (`start_load`: the pool's sturdiest item; the tutorial uses a fixed crate), so the stack starts building about a second after the start with no input needed.
 - Completion = reaching the depot. Three independent optional medals: **Delivery** (cargo value delivered ≥ target), **Route** (a route/skill objective), **Care** (cargo preservation).
 - Delivery targets are 55% of the value of the best 8 non-rare pickups on offer (enforced ≤ 62% by tests).
 - Levels 1–4 teach steering, stacking, wobble recovery, shedding under clearance, forks and delivering. Each later level adds one new decision or set piece; each world finale combines that world's mechanics.
@@ -14,7 +15,7 @@ _Generated from `src/data/levels.ts` and `src/data/chunks.ts` by `npx vitest run
 
 | # | Level | New decision / set piece | Speed (m/s) | Length | Time @avg | Medals: Delivery / Route / Care |
 |---|---|---|---|---|---|---|
-| 1 | **First Delivery** (`h1`) | Steer, grab cargo, keep the stack upright, and deliver it to the depot. | 12.5→14 | 482 m | 36 s | ≥35 / Grab 20 road coins / Lose at most 2 items |
+| 1 | **First Delivery** (`h1`) | Steer, grab cargo, keep the stack upright, and deliver it to the depot. | 12.5→14 | 406 m | 31 s | ≥30 / Grab 20 road coins / Lose at most 2 items |
 | 2 | **Corner Bakery** (`h2`) | Cakes are worth more but hate bumps. Ease into the corners. | 13.5→15 | 1162 m | 82 s | ≥60 / Deliver 2 cakes / Deliver 2 fragile items undamaged |
 | 3 | **Mind the Awnings** (`h3`) | Striped awnings hang low. Check the clearance signs and shed if you must. | 14→15.5 | 1090 m | 74 s | ≥65 / Squeeze under 2 beams with < 35 cm to spare / Lose at most 2 items |
 | 4 | **Fork in the Wharf** (`h4`) | Choose your route: the left lane pays more but is cluttered. | 14→16 | 1230 m | 82 s | ≥60 / Take the risky route at 2 forks / Deliver 80% of collected value |
@@ -60,9 +61,9 @@ _Generated from `src/data/levels.ts` and `src/data/chunks.ts` by `npx vitest run
 
 ### 1. First Delivery
 
-- **Route:** 8 chunks — tutorial: steering, tutorial: stacking, tutorial: wobble & recovery, tutorial: shedding under a 2.9 m beam, tutorial: delivery.
+- **Route:** 7 chunks — tutorial: first cargo (no input needed), tutorial: steering, tutorial: wobble & recovery, tutorial: shedding under a 2.9 m beam, tutorial: delivery.
 - **Cargo pool:** Cardboard Parcel, Fish Crate, Potted Fern.
-- **Objectives:** deliver ≥ 35; Grab 20 road coins; Lose at most 2 items.
+- **Objectives:** deliver ≥ 30; Grab 20 road coins; Lose at most 2 items.
 
 ### 2. Corner Bakery
 
@@ -283,6 +284,6 @@ Explicit envelope: speed 15 → 24 m/s over 4200 m (hard cap), obstacle difficul
 | `fork_cliff_jump` (cliffside shortcut jump) | 2 | 0.3–1 | 1.5 | fork, ramp, gap |
 | `fork_rooftop` (rooftop route vs low tunnels) | 3 | 0.3–1 | 1.5 | fork, ramp, overhead |
 
-Scheduled-only chunks: `start`, `finish`, `tut_steer`, `tut_cargo`, `tut_wobble`, `tut_shed`, `tut_deliver`, `depot_fork`.
+Scheduled-only chunks: `start`, `start_load`, `finish`, `tut_cargo`, `tut_steer`, `tut_wobble`, `tut_shed`, `tut_deliver`, `depot_fork`.
 
 Generation rules: weighted random pick inside the difficulty window; a chunk used in the last 2 picks is excluded and one used in the last 6 is down-weighted ×0.3; same leading tag as the previous chunk ×0.5; after two hazard chunks in a row breathers are boosted ×3. Each candidate is appended and validated by the reachability DP from the previous frontier (widest/slowest effective lateral speed at max speed, ramp flights at min and max speed, landing zones, current load clearance up to 4.8 m); failures are rolled back, up to 8 candidates, then a guaranteed breather.

@@ -1,12 +1,13 @@
 import { clamp, smoothstep } from '../core/math';
 import { Rng } from '../core/rng';
+import type { CargoShape } from '../data/cargo';
 import { CHUNKS, CHUNK_BY_ID, type ChunkTemplate, chunkLength } from '../data/chunks';
 import { ECONOMY } from '../data/economy';
 import type { EffectiveHandling } from '../data/upgrades';
 import { placeChunk, type PlacedChunk } from '../sim/builder';
 import { Track } from '../sim/track';
 import type { WorldId } from '../sim/types';
-import { WORLD_CARGO, cargoPicker } from './cargoPick';
+import { WORLD_CARGO, baseCargo, cargoPicker } from './cargoPick';
 import { reachVehicleFrom, validateRange } from './reach';
 
 /** Explicit maximum difficulty envelope for Long Haul. */
@@ -61,7 +62,9 @@ export class EndlessRoute {
     this.world = opt.startWorld;
     this.track = new Track(opt.startWorld);
     this.nextDepotDist = this.rng.range(ECONOMY.endlessDepotEvery[0] * 0.6, ECONOMY.endlessDepotEvery[0] * 0.8);
-    this.place(CHUNK_BY_ID.start, false);
+    // Open with a sturdy base item dead ahead so the stack starts building at once.
+    const base = baseCargo(WORLD_CARGO[opt.startWorld]);
+    this.place(CHUNK_BY_ID.start_load, false, 0, () => base);
     this.validatedTo = Math.max(0, this.track.endS - 12);
     this.ensure(ENDLESS_ENVELOPE.aheadDist);
   }
@@ -150,9 +153,9 @@ export class EndlessRoute {
     return w;
   }
 
-  private place(t: ChunkTemplate, mirror: boolean, d = 0): PlacedChunk {
+  private place(t: ChunkTemplate, mirror: boolean, d = 0, pickCargo?: (rng: Rng) => CargoShape): PlacedChunk {
     const windScale = 1 + (ENDLESS_ENVELOPE.windMax - 1) * d + (this.opt.windBoost ?? 0);
-    const pick = cargoPicker(WORLD_CARGO[this.world], 0.025);
+    const pick = pickCargo ?? cargoPicker(WORLD_CARGO[this.world], 0.025);
     const p = placeChunk(this.track, t, { mirror, world: this.world, chunk: this.serial++, rng: this.rng, pickCargo: pick, windScale, coinScale: 0.75 });
     if (d >= ENDLESS_ENVELOPE.rainFrom && !this.opt.rainy && this.rng.chance(0.18)) this.rainRanges.push([p.s0, p.s1]);
     this.history.push(t.id);
