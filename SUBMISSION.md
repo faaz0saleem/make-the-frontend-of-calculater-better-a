@@ -1,4 +1,4 @@
-# SUBMISSION COPY — Overloaded
+# SUBMISSION COPY — Tippy Trucker
 
 Prepared for the CrazyGames developer portal. The owner must review it, choose final tags in the portal's own taxonomy, and submit. Nothing has been submitted from this repository.
 
@@ -10,7 +10,7 @@ Every claim below is checked against the game's data files (5 trucks in `src/dat
 ```
 Stack it high. Drive it home. Try not to drop the piano.
 
-Overloaded is a 3D arcade delivery game about one gloriously bad idea: what if you just stacked everything on one tiny truck?
+Tippy Trucker is a 3D arcade delivery game about one gloriously bad idea: what if you just stacked everything on one tiny truck?
 
 Your truck drives forward on its own - you steer. Grab parcels, cakes, fridges, pianos, fish tanks and a rare Golden Gnome, and every pickup piles onto a tower that leans, sways and wobbles with every turn. More cargo means more coins at the depot, but also a taller, heavier stack that is harder to keep upright.
 
@@ -36,13 +36,13 @@ Mobile: drag left/right anywhere on the screen to steer, tap SHED to drop the to
 ```
 
 ## Title
-Overloaded
+Tippy Trucker
 
 ## Short description (≈160 characters)
 Steer a tiny truck with a ridiculously tall stack of cargo through harbours, canyons and neon markets. Grab more, wobble more, deliver it all!
 
 ## Full description
-Overloaded is a 3D arcade delivery runner about one simple, terrible idea: what if you just stacked everything?
+Tippy Trucker is a 3D arcade delivery runner about one simple, terrible idea: what if you just stacked everything?
 
 Your little truck drives itself. Your job is to steer around barriers, pick up parcels, cakes, fridges, pianos and fish tanks, and keep the whole wobbling tower upright all the way to the depot. Every item you grab is worth more coins, and every item also makes your load taller, heavier and harder to control. Corners make the stack lean, gusts push light cargo sideways, low awnings and tunnels knock off anything too tall, and swinging crane containers punish bad timing. When things get dicey, steer smoothly to settle the wobble, or shed the top item to save the rest.
 
