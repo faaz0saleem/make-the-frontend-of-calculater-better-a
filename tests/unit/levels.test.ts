@@ -4,6 +4,7 @@ import { CHUNKS, CHUNK_BY_ID, chunkLength } from '../../src/data/chunks';
 import { LEVELS } from '../../src/data/levels';
 import { VEHICLE_IDS } from '../../src/data/vehicles';
 import { buildLevel, evaluateMedals, levelSpeedAt } from '../../src/modes/campaign';
+import { EndlessRoute } from '../../src/modes/endless';
 import { reachVehicleFrom, validateRange } from '../../src/modes/reach';
 import { Autopilot } from '../../src/sim/autopilot';
 import { RunSession } from '../../src/sim/run';
@@ -65,6 +66,26 @@ describe('campaign levels', () => {
         const res = validateRange(b.track, 0, b.finishS! + 20, reachVehicleFrom(h), { vMin: l.speed[0] * 0.84, vMax: l.speed[1] });
         expect(res.ok, `${l.id} with ${v} blocked at s=${res.failS}`).toBe(true);
       }
+    }
+  });
+
+  it('every run has cargo on the truck within 3 s, even with no steering input (the hook shows at once)', () => {
+    const firstCargoT = (run: RunSession): number => {
+      while (run.state === 'running' && run.t < 3) {
+        run.step(1 / 120, { steer: 0, shed: false });
+        if (run.truck.itemCount > 0) return run.t;
+      }
+      return Infinity;
+    };
+    for (const l of LEVELS) {
+      const b = buildLevel(l);
+      const run = new RunSession({ mode: 'campaign', track: b.track, handling: handling('pickup'), seed: 1, speedAt: levelSpeedAt(l, b.finishS!), finishS: b.finishS, windScale: l.wind ?? 1, wet: l.wet });
+      expect(firstCargoT(run), l.id).toBeLessThan(3);
+    }
+    for (const startWorld of [1, 2, 3] as const) {
+      const route = new EndlessRoute({ seed: 5, handling: handling('pickup'), startWorld });
+      const run = new RunSession({ mode: 'endless', track: route.track, handling: handling('pickup'), seed: 5, speedAt: (d) => route.speedAt(d), finishS: null });
+      expect(firstCargoT(run), `endless world ${startWorld}`).toBeLessThan(3);
     }
   });
 

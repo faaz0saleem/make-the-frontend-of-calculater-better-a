@@ -4,7 +4,7 @@ import { type CareObjective, type LevelDef, type RouteObjective } from '../data/
 import { placeChunk, type PlacedChunk } from '../sim/builder';
 import type { RunStats } from '../sim/run';
 import { Track } from '../sim/track';
-import { cargoPicker } from './cargoPick';
+import { baseCargo, cargoPicker } from './cargoPick';
 
 export interface BuiltRoute {
   track: Track;
@@ -17,7 +17,12 @@ export function buildLevel(level: LevelDef): BuiltRoute {
   const track = new Track(level.world);
   const rng = new Rng('level:' + level.id);
   const pick = cargoPicker(level.cargo, level.cargo.includes('gnome') ? 0.06 : 0);
-  const seq = ['start', ...level.seq, 'finish'];
+  // Opening chunk: the level's sturdiest cargo dead ahead, so the stack starts building at once.
+  // Its picker ignores the rng, so the rest of the level keeps exactly the same random layout.
+  const base = baseCargo(level.cargo);
+  const pickBase = () => base;
+  const ownStart = CHUNK_BY_ID[level.seq[0]?.replace('~', '')]?.tags.includes('start');
+  const seq = [...(ownStart ? [] : ['start_load']), ...level.seq, 'finish'];
   const chunks: PlacedChunk[] = [];
   let finishS = 0;
   seq.forEach((ref, i) => {
@@ -25,7 +30,8 @@ export function buildLevel(level: LevelDef): BuiltRoute {
     const id = mirror ? ref.slice(1) : ref;
     const t = CHUNK_BY_ID[id];
     if (!t) throw new Error(`Unknown chunk ${id} in level ${level.id}`);
-    const placed = placeChunk(track, t, { mirror, world: level.world, chunk: i, rng, pickCargo: pick, windScale: level.wind ?? 1, coinScale: 0.6 });
+    const opener = i === 0 && t.tags.includes('start');
+    const placed = placeChunk(track, t, { mirror, world: level.world, chunk: i, rng, pickCargo: opener ? pickBase : pick, windScale: level.wind ?? 1, coinScale: 0.6 });
     chunks.push(placed);
     if (id === 'finish') finishS = placed.s0 + 2;
   });

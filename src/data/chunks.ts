@@ -68,33 +68,47 @@ const median = (body: number): ItemSpec => ({ k: 'wall', s: 16, len: body + 12, 
 
 export const CHUNKS: ChunkTemplate[] = [
   // ---------------------------------------------------------------- breathers / cargo
+  // Plain lead-in (unit tests and tools build short tracks from it).
   {
     id: 'start', worlds: ALL, diff: [0, 1], weight: 0, tags: ['start'], segs: straight(40), scheduledOnly: true,
     items: [{ k: 'coins', s: 14, x: 0, n: 7, ds: 3 }],
+  },
+  // Every campaign / Long Haul / Daily run opens with this: a sturdy base item dead ahead, so the
+  // truck is carrying cargo about a second after "go" with no input needed (the mode picks which
+  // item; the variant is fixed so the opener never shifts the route's random sequence).
+  {
+    id: 'start_load', worlds: ALL, diff: [0, 1], weight: 0, tags: ['start'], segs: straight(40), scheduledOnly: true,
+    items: [
+      { k: 'pickup', s: 14, x: 0, cargo: 'auto', variant: 0 },
+      { k: 'coins', s: 20, x: 0, n: 6, ds: 3 },
+    ],
   },
   {
     id: 'finish', worlds: ALL, diff: [0, 1], weight: 0, tags: ['finish'], segs: straight(90), scheduledOnly: true,
     items: [{ k: 'sign', s: 2, x: 0, label: 'finish', hw: 4.5 }],
   },
   // ---------------------------------------------------------------- tutorial (Harbor 1)
+  // One lesson at a time, and the stack is never empty for long: a crate dead ahead at the start
+  // (no input needed), then steering is taught by steering into cargo. The cargo is fixed so the
+  // stack reaching the 2.9 m beam (Pip Pickup: 0.82 m bed + crate, parcel, parcel, fern = ~3.4 m)
+  // needs exactly one shed: dropping the fern brings it to ~2.5 m.
   {
-    id: 'tut_steer', worlds: [1], diff: [0, 0], weight: 0, tags: ['tutorial'], segs: straight(76), scheduledOnly: true,
+    id: 'tut_cargo', worlds: [1], diff: [0, 0], weight: 0, tags: ['start', 'tutorial'], segs: straight(40), scheduledOnly: true,
     items: [
-      { k: 'sign', s: 0, x: 0, label: 'tip:steer' },
-      { k: 'coins', s: 12, x: 0, x1: -3, n: 6, ds: 3 },
-      { k: 'coins', s: 34, x: -3, x1: 3, n: 8, ds: 3 },
-      { k: 'cone', s: 66, x: -3 }, { k: 'cone', s: 66, x: -2.2 },
+      { k: 'sign', s: 0, x: 0, label: 'tip:cargo' },
+      { k: 'pickup', s: 16, x: 0, cargo: 'crate', variant: 0 },
+      { k: 'coins', s: 22, x: 0, n: 6, ds: 3 },
     ],
   },
   {
-    id: 'tut_cargo', worlds: [1], diff: [0, 0], weight: 0, tags: ['tutorial'], segs: straight(80), scheduledOnly: true,
+    id: 'tut_steer', worlds: [1], diff: [0, 0], weight: 0, tags: ['tutorial'], segs: straight(80), scheduledOnly: true,
     items: [
-      { k: 'sign', s: 0, x: 0, label: 'tip:cargo' },
-      { k: 'pickup', s: 16, x: 0, cargo: 'auto' },
-      { k: 'pickup', s: 36, x: 3, cargo: 'auto' },
-      { k: 'pickup', s: 56, x: 0, cargo: 'auto' },
-      { k: 'pickup', s: 72, x: -3, cargo: 'auto' },
-      { k: 'coins', s: 20, x: 0, x1: 3, n: 5, ds: 3 },
+      { k: 'sign', s: 0, x: 0, label: 'tip:steer' },
+      { k: 'coins', s: 6, x: 0, x1: 3, n: 10, ds: 2.6 },
+      { k: 'pickup', s: 32, x: 3, cargo: 'parcel' },
+      { k: 'coins', s: 38, x: 3, x1: -3, n: 12, ds: 2.8 },
+      { k: 'pickup', s: 68, x: -3, cargo: 'parcel' },
+      { k: 'coins', s: 72, x: -3, x1: 0, n: 6, ds: 2.6 },
     ],
   },
   {
@@ -102,7 +116,7 @@ export const CHUNKS: ChunkTemplate[] = [
     segs: [{ len: 20 }, { len: 14, k: 0, k1: 1 / 52 }, { len: 34, k: 1 / 52 }, { len: 14, k: 1 / 52, k1: 0 }, { len: 18 }],
     scheduledOnly: true,
     items: [
-      { k: 'pickup', s: 6, x: 0, cargo: 'auto' },
+      { k: 'pickup', s: 8, x: 0, cargo: 'plant' },
       { k: 'sign', s: 18, x: 0, label: 'tip:wobble' },
       { k: 'coins', s: 24, x: 2.6, n: 10, ds: 4 },
     ],
@@ -110,7 +124,6 @@ export const CHUNKS: ChunkTemplate[] = [
   {
     id: 'tut_shed', worlds: [1], diff: [0, 0], weight: 0, tags: ['tutorial'], segs: straight(80), scheduledOnly: true,
     items: [
-      { k: 'pickup', s: 4, x: 0, cargo: 'parcel' },
       { k: 'sign', s: 12, x: 0, label: 'tip:shed' },
       { k: 'sign', s: 14, x: -5.2, label: 'clear:2.9' },
       { k: 'overhead', s: 56, x: 0, hw: 4.6, h: 2.9 },

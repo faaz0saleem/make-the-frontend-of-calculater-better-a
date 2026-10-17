@@ -26,7 +26,8 @@ export interface LevelDef {
   intro: string;
   speed: [number, number];
   cargo: CargoShape[];
-  /** Chunk ids; a leading "~" mirrors the chunk. 'start'/'finish' are added automatically. */
+  /** Chunk ids; a leading "~" mirrors the chunk. The 'start_load' opener (unless the first chunk is
+   * itself tagged 'start') and 'finish' are added automatically. */
   seq: string[];
   wind?: number;
   wet?: boolean;
@@ -42,8 +43,8 @@ const RAW: Omit<LevelDef, 'num'>[] = [
     id: 'h1', world: 1, name: 'First Delivery', tutorial: true,
     intro: 'Steer, grab cargo, keep the stack upright, and deliver it to the depot.',
     speed: [12.5, 14], cargo: ['parcel', 'crate', 'parcel', 'plant'],
-    seq: ['tut_steer', 'tut_cargo', 'tut_wobble', 'tut_shed', 'cargo_trio', 'tut_deliver'],
-    objectives: { target: 35, route: { kind: 'coins', n: 20 }, care: { kind: 'lostMax', n: 2 } },
+    seq: ['tut_cargo', 'tut_steer', 'tut_wobble', 'tut_shed', 'cargo_trio', 'tut_deliver'],
+    objectives: { target: 30, route: { kind: 'coins', n: 20 }, care: { kind: 'lostMax', n: 2 } },
   },
   {
     id: 'h2', world: 1, name: 'Corner Bakery',

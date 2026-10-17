@@ -13,7 +13,7 @@ const SET_PIECES: Record<string, string> = {
   moving_gate: 'sliding gate', underpass: 'fixed-ceiling tunnel', market_stalls: 'market stalls', fork_rooftop: 'rooftop route vs low tunnels', parked_carts: 'parked carts',
   barrier_double: 'double barrier weave', needle: 'thread-the-needle gap', crate_wall: 'crate wall', puddle_lane: 'puddles', bump_run: 'speed bumps', tight_curve: 'tight curve',
   hill_crest: 'hill crest (light cargo)', cone_slalom: 'cone slalom', barrier_single: 'single barrier', s_bend: 'S-bend', gentle_curve: 'gentle curve',
-  tut_steer: 'tutorial: steering', tut_cargo: 'tutorial: stacking', tut_wobble: 'tutorial: wobble & recovery', tut_shed: 'tutorial: shedding under a 2.9 m beam', tut_deliver: 'tutorial: delivery',
+  tut_steer: 'tutorial: steering', tut_cargo: 'tutorial: first cargo (no input needed)', tut_wobble: 'tutorial: wobble & recovery', tut_shed: 'tutorial: shedding under a 2.9 m beam', tut_deliver: 'tutorial: delivery',
 };
 
 test('write LEVEL_DESIGN.md', () => {
@@ -21,6 +21,7 @@ test('write LEVEL_DESIGN.md', () => {
   L.push('# LEVEL DESIGN — Overloaded', '', '_Generated from `src/data/levels.ts` and `src/data/chunks.ts` by `npx vitest run -c vitest.tools.config.ts leveldoc`. Do not edit by hand._', '');
   L.push('## Principles', '',
     '- Every level is a hand-ordered sequence of authored road chunks (shared library) plus a level-specific cargo pool, speed ramp and objectives.',
+    '- Every run (campaign, Long Haul, Daily) opens with cargo dead ahead (`start_load`: the pool\'s sturdiest item; the tutorial uses a fixed crate), so the stack starts building about a second after the start with no input needed.',
     '- Completion = reaching the depot. Three independent optional medals: **Delivery** (cargo value delivered ≥ target), **Route** (a route/skill objective), **Care** (cargo preservation).',
     '- Delivery targets are 55% of the value of the best 8 non-rare pickups on offer (enforced ≤ 62% by tests).',
     '- Levels 1–4 teach steering, stacking, wobble recovery, shedding under clearance, forks and delivering. Each later level adds one new decision or set piece; each world finale combines that world\'s mechanics.',
@@ -42,7 +43,7 @@ test('write LEVEL_DESIGN.md', () => {
   for (const l of LEVELS) {
     const pieces = [...new Set(l.seq.map((r) => r.replace('~', '')).filter((id) => SET_PIECES[id] && !['cargo_line', 'cargo_trio', 'coin_weave'].includes(id)).map((id) => SET_PIECES[id]))];
     const cargo = [...new Set(l.cargo)].map((c) => CARGO[c].name).join(', ');
-    L.push(`### ${l.num}. ${l.name}`, '', `- **Route:** ${l.seq.length + 2} chunks — ${pieces.join(', ')}.`, `- **Cargo pool:** ${cargo}.`, `- **Objectives:** deliver ≥ ${l.objectives.target}; ${routeLabel(l.objectives.route)}; ${careLabel(l.objectives.care)}.`, '');
+    L.push(`### ${l.num}. ${l.name}`, '', `- **Route:** ${buildLevel(l).chunks.length} chunks — ${pieces.join(', ')}.`, `- **Cargo pool:** ${cargo}.`, `- **Objectives:** deliver ≥ ${l.objectives.target}; ${routeLabel(l.objectives.route)}; ${careLabel(l.objectives.care)}.`, '');
   }
   L.push('## Difficulty progression', '',
     '- Harbor (1–10): 12.5–17.5 m/s. Introduces soft hazards → hard barriers (5) → hooks (6) → drop edges (7) → wet grip (8) → ramps (9). Finale: hooks + low-beam fork + bridge + ramps with fragile cakes.',

@@ -42,12 +42,13 @@ export interface UiBridge {
   devOverlay?(text: string): void;
 }
 
+// Tutorial tips, in the order the tutorial shows them (one idea each; key = keyboard/mouse, touch = touch).
 const TIPS: Record<string, { key: string; touch: string }> = {
-  steer: { key: 'Steer with <b>A</b> / <b>D</b>, the <b>arrow keys</b>, or <b>drag</b> with the mouse.', touch: '<b>Drag left or right</b> anywhere to steer.' },
-  cargo: { key: 'Drive into cargo to stack it. <b>More cargo pays more</b>, but your truck gets taller and wobblier.', touch: 'Drive into cargo to stack it. <b>More cargo pays more</b>, but your truck gets taller and wobblier.' },
-  wobble: { key: 'Corners make the stack lean. <b>Steer smoothly</b> and ease toward the lean to settle it. Watch the meter!', touch: 'Corners make the stack lean. <b>Steer smoothly</b> and ease toward the lean to settle it. Watch the meter!' },
-  shed: { key: 'Low beam ahead: your stack is too tall! Press <b>SPACE</b> to shed the top item.', touch: 'Low beam ahead: your stack is too tall! Tap <b>SHED</b> to drop the top item.' },
-  deliver: { key: 'Reach the depot to deliver. <b>Intact cargo pays full price.</b>', touch: 'Reach the depot to deliver. <b>Intact cargo pays full price.</b>' },
+  cargo: { key: 'Drive into cargo to <b>stack it</b> on your truck. More cargo, more coins!', touch: 'Drive into cargo to <b>stack it</b> on your truck. More cargo, more coins!' },
+  steer: { key: 'Steer with <b>A</b> / <b>D</b>, the <b>arrow keys</b> or a mouse <b>drag</b>. Grab the cargo on the right!', touch: '<b>Drag left or right</b> anywhere to steer. Grab the cargo on the right!' },
+  wobble: { key: 'Tall stacks lean in corners. <b>Steer smoothly</b> and keep the <b>STABLE</b> meter green.', touch: 'Tall stacks lean in corners. <b>Steer smoothly</b> and keep the <b>STABLE</b> meter green.' },
+  shed: { key: 'Low beam ahead and your stack is too tall! Press <b>SPACE</b> to drop the top item.', touch: 'Low beam ahead and your stack is too tall! Tap <b>SHED</b> to drop the top item.' },
+  deliver: { key: 'Drive under the depot arch to deliver. <b>Undamaged cargo pays full price.</b>', touch: 'Drive under the depot arch to deliver. <b>Undamaged cargo pays full price.</b>' },
 };
 
 export class Game {
