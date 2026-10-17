@@ -326,6 +326,11 @@
   .lvl .num { font-size: 1.25em; }
   .stab-bar { height: 22vh; }
   .results h2 { font-size: 1.5em; }
+  /* Short landscape phones: main action and the secondary row side by side so every button stays on screen. */
+  .res-actions { flex-direction: row; align-items: stretch; gap: 8px; margin-top: .4em; }
+  .res-actions > .btn { flex: 1 1 0; min-width: 0; }
+  .res-actions > .res-more { flex: 2 1 0; min-width: 0; }
+  .medal-row { margin: .2em 0 .35em; }
 }
 @media (max-width: 760px) and (orientation: portrait) {
   .mode-row { grid-template-columns: 1fr; }
