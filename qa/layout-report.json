@@ -1,0 +1,20 @@
+[
+  {
+    "size": "844x390",
+    "screen": "results",
+    "problem": "outside viewport",
+    "el": "btn-retry"
+  },
+  {
+    "size": "844x390",
+    "screen": "results",
+    "problem": "outside viewport",
+    "el": "btn-res-garage"
+  },
+  {
+    "size": "844x390",
+    "screen": "results",
+    "problem": "outside viewport",
+    "el": "btn-res-menu"
+  }
+]

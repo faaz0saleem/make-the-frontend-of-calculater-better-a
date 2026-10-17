@@ -1,0 +1,36 @@
+{
+  "name": "overloaded",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Overloaded - a 3D arcade delivery runner about a tiny truck with an impossibly tall stack of cargo.",
+  "type": "module",
+  "license": "UNLICENSED",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "build:full": "vite build --mode full",
+    "preview": "vite preview --port 4173 --strictPort",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "e2e": "playwright test",
+    "budget": "node scripts/budget.mjs",
+    "package": "node scripts/package.mjs",
+    "release": "npm run typecheck && npm run test && npm run build && npm run budget && npm run package"
+  },
+  "dependencies": {
+    "@fontsource/fredoka": "5.3.0",
+    "three": "0.186.1"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.56.1",
+    "@types/node": "22.20.5",
+    "@types/three": "0.186.0",
+    "typescript": "7.0.2",
+    "vite": "8.3.1",
+    "vitest": "5.0.3"
+  }
+}

@@ -1,0 +1,14 @@
+node_modules/
+dist/
+release/
+test-results/
+playwright-report/
+.vite/
+*.log
+.DS_Store
+qa/tmp/
+media/tmp/
+dist-capture
+media/tmp-*/
+media/longplay/
+.claude/worktrees/

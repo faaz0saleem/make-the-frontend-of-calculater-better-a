@@ -1,0 +1,84 @@
+{
+  "dir": "dist",
+  "fileCount": 12,
+  "totalBytes": 1114662,
+  "initialBytes": 1048563,
+  "totalMB": 1.063,
+  "initialMB": 1,
+  "gzipTotalMB": 0.369,
+  "checks": {
+    "total_le_250MB": true,
+    "files_le_1500": true,
+    "initial_le_50MB": true,
+    "mobile_initial_le_20MB": true,
+    "total_le_20MB_without_sdk": true,
+    "no_source_maps": true,
+    "index_at_root": true,
+    "relative_asset_paths": true,
+    "no_dev_platform": true,
+    "no_dev_overlay": true,
+    "licenses_present": true
+  },
+  "files": [
+    {
+      "path": "assets/index-S5a7YaBX.js",
+      "bytes": 970425,
+      "gz": 267865
+    },
+    {
+      "path": "assets/index-C2RdMSsD.css",
+      "bytes": 28403,
+      "gz": 6811
+    },
+    {
+      "path": "assets/fredoka-latin-600-normal-CcrEjrB4.woff",
+      "bytes": 20380,
+      "gz": 20341
+    },
+    {
+      "path": "assets/fredoka-latin-400-normal-DbXSrOeS.woff",
+      "bytes": 20124,
+      "gz": 20117
+    },
+    {
+      "path": "assets/fredoka-latin-700-normal-C8FeHd3X.woff",
+      "bytes": 19812,
+      "gz": 19793
+    },
+    {
+      "path": "assets/fredoka-latin-600-normal-C4zohCW5.woff2",
+      "bytes": 16468,
+      "gz": 16491
+    },
+    {
+      "path": "assets/fredoka-latin-400-normal-17JuUzdy.woff2",
+      "bytes": 16076,
+      "gz": 16099
+    },
+    {
+      "path": "assets/fredoka-latin-700-normal-BOIZVyIN.woff2",
+      "bytes": 15900,
+      "gz": 15923
+    },
+    {
+      "path": "licenses/Fredoka-OFL-1.1.txt",
+      "bytes": 4387,
+      "gz": 1975
+    },
+    {
+      "path": "index.html",
+      "bytes": 1291,
+      "gz": 646
+    },
+    {
+      "path": "licenses/three.js-MIT.txt",
+      "bytes": 1081,
+      "gz": 667
+    },
+    {
+      "path": "licenses/README.txt",
+      "bytes": 315,
+      "gz": 244
+    }
+  ]
+}

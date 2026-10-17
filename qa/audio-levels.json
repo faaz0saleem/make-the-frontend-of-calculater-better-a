@@ -1,0 +1,108 @@
+{
+  "dir": "dist",
+  "errors": [],
+  "menuBeforeGesture": "no audio context",
+  "menuAfterGesture": "running",
+  "menu": {
+    "music": {
+      "rms": -23.2,
+      "median": -23.4,
+      "maxWin": -18.4,
+      "peak": -9.4,
+      "blocks": 174
+    },
+    "sfx": {
+      "rms": -120,
+      "median": -120,
+      "maxWin": -120,
+      "peak": -120,
+      "blocks": 174
+    },
+    "out": {
+      "rms": -22.2,
+      "median": -22.4,
+      "maxWin": -17.2,
+      "peak": -8.4,
+      "blocks": 174
+    }
+  },
+  "driving": {
+    "music": {
+      "rms": -22,
+      "median": -25,
+      "maxWin": -13,
+      "peak": -6.6,
+      "blocks": 346
+    },
+    "sfx": {
+      "rms": -29.7,
+      "median": -30.2,
+      "maxWin": -26.6,
+      "peak": -18.3,
+      "blocks": 346
+    },
+    "out": {
+      "rms": -20.4,
+      "median": -22.8,
+      "maxWin": -11.9,
+      "peak": -4.9,
+      "blocks": 346
+    }
+  },
+  "engineBed": {
+    "median": -30.1,
+    "rms": -28.1
+  },
+  "oneShots": {
+    "pickup": {
+      "maxWin": -17.2,
+      "peak": -7.6,
+      "marginOverEngine": 12.9
+    },
+    "spill": {
+      "maxWin": -16.7,
+      "peak": -7.9,
+      "marginOverEngine": 13.4
+    },
+    "shed": {
+      "maxWin": -17.3,
+      "peak": -6.1,
+      "marginOverEngine": 12.8
+    },
+    "bank": {
+      "maxWin": -16.8,
+      "peak": -8.9,
+      "marginOverEngine": 13.3
+    },
+    "coin": {
+      "maxWin": -20.9,
+      "peak": -10.7,
+      "marginOverEngine": 9.2
+    },
+    "full": {
+      "maxWin": -20.1,
+      "peak": -11.1,
+      "marginOverEngine": 10
+    },
+    "land": {
+      "maxWin": -15.5,
+      "peak": -9.3,
+      "marginOverEngine": 14.6
+    },
+    "impact": {
+      "maxWin": -14.8,
+      "peak": -7.3,
+      "marginOverEngine": 15.3
+    },
+    "squish": {
+      "maxWin": -18.3,
+      "peak": -8.7,
+      "marginOverEngine": 11.8
+    },
+    "nearMiss": {
+      "maxWin": -22.1,
+      "peak": -14.6,
+      "marginOverEngine": 8
+    }
+  }
+}
