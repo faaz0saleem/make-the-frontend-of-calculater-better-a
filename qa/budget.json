@@ -1,11 +1,11 @@
 {
   "dir": "dist",
   "fileCount": 12,
-  "totalBytes": 1101085,
-  "initialBytes": 1034986,
-  "totalMB": 1.05,
-  "initialMB": 0.987,
-  "gzipTotalMB": 0.365,
+  "totalBytes": 1114468,
+  "initialBytes": 1048369,
+  "totalMB": 1.063,
+  "initialMB": 1,
+  "gzipTotalMB": 0.369,
   "checks": {
     "total_le_250MB": true,
     "files_le_1500": true,
@@ -21,14 +21,14 @@
   },
   "files": [
     {
-      "path": "assets/index-B1uxoTSj.js",
-      "bytes": 961634,
-      "gz": 264675
+      "path": "assets/index-C8cECJuC.js",
+      "bytes": 970425,
+      "gz": 267865
     },
     {
-      "path": "assets/index-B6ZB0W4i.css",
-      "bytes": 23617,
-      "gz": 5727
+      "path": "assets/index-BPp8cu-9.css",
+      "bytes": 28209,
+      "gz": 6770
     },
     {
       "path": "assets/fredoka-latin-600-normal-CcrEjrB4.woff",

@@ -2,6 +2,39 @@
 
 Prepared for the CrazyGames developer portal. The owner must review it, choose final tags in the portal's own taxonomy, and submit. Nothing has been submitted from this repository.
 
+## Copy-paste for the portal form (plain text)
+
+Every claim below is checked against the game's data files (5 trucks in `src/data/vehicles.ts`, 14 paints + 7 extras in `src/data/cosmetics.ts`, 19 cargo types in `src/data/cargo.ts`, 30 levels in `src/data/levels.ts`).
+
+### Description
+```
+Stack it high. Drive it home. Try not to drop the piano.
+
+Overloaded is a 3D arcade delivery game about one gloriously bad idea: what if you just stacked everything on one tiny truck?
+
+Your truck drives forward on its own - you steer. Grab parcels, cakes, fridges, pianos, fish tanks and a rare Golden Gnome, and every pickup piles onto a tower that leans, sways and wobbles with every turn. More cargo means more coins at the depot, but also a taller, heavier stack that is harder to keep upright.
+
+Ease through corners to settle the wobble, dodge barriers and carts, ride the wind gusts, duck under low awnings and tunnels, and time your run past swinging crane containers. Too tall to fit? Shed the top item to save the rest - a well-timed sacrifice even earns a bonus.
+
+- Delivery Tour: 30 hand-built deliveries across Sunlit Harbor, Canyon Express and Midnight Market, each with three medals to earn.
+- Long Haul: an endless road. Bank your cargo at a depot to keep it safe, or keep driving for a bigger multiplier.
+- Daily Contract: a new route, truck and weather every day.
+- Garage: 5 trucks that really handle differently, 14 paint jobs, 7 fun extras and handling upgrades.
+- 19 kinds of cargo to collect in your album, plus achievements and optional contracts.
+- Original music for every world and punchy, comic sound effects.
+
+Quick to learn, hard to master: your first delivery takes about 30 seconds, and keeping a ten-item tower alive through a night-market rush is another story. No timers, no energy, no paywalls - every coin is earned on the road.
+```
+
+### Controls
+```
+Steer: A / D or Left / Right arrow keys, or click and drag left/right with the mouse
+Shed the top item: Space (or click the SHED button)
+Pause: P (or the pause button)
+
+Mobile: drag left/right anywhere on the screen to steer, tap SHED to drop the top item, tap the pause button to pause.
+```
+
 ## Title
 Overloaded
 
