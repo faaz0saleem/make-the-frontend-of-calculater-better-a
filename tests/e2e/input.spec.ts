@@ -3,6 +3,14 @@ import { baseSave, click, openGame, state, waitState } from './util';
 
 const truckX = (f: import('@playwright/test').Frame) => f.evaluate(() => (window as unknown as { __wh: { game: { run: { truck: { x: number } } } } }).__wh.game.run.truck.x);
 
+/** Counts shed events of the current run (runs now open with cargo on the bed, so 'empty' is not the signal). */
+const watchSheds = (f: import('@playwright/test').Frame) => f.evaluate(() => {
+  const w = window as unknown as { __sheds: number; __wh: { game: { run: { events: { on(e: string, fn: () => void): void } } } } };
+  w.__sheds = 0;
+  w.__wh.game.run.events.on('shed', () => { w.__sheds++; });
+});
+const sheds = (f: import('@playwright/test').Frame) => f.evaluate(() => (window as unknown as { __sheds: number }).__sheds);
+
 test('keyboard steering, Space shed, P pause', async ({ page }) => {
   const f = await openGame(page, undefined, baseSave());
   await click(f, 'mode-endless');
@@ -22,8 +30,9 @@ test('keyboard steering, Space shed, P pause', async ({ page }) => {
     const g = (window as unknown as { __wh: { game: { run: { truck: { addCargo(d: unknown, c: unknown[]): void } } } } }).__wh.game;
     g.run.truck.addCargo({ id: 'parcel', name: 'Parcel', desc: '', world: 1, mass: 4, height: 0.55, width: 0.9, value: 6, fragility: 0.1, grip: 0.8, crushLimit: Infinity }, []);
   });
+  await watchSheds(f);
   await page.keyboard.press('Space');
-  await expect.poll(async () => (await state(f)).items).toBe(0);
+  await expect.poll(() => sheds(f)).toBe(1);
   await page.keyboard.press('KeyP');
   await expect.poll(async () => (await state(f)).fsm).toBe('paused');
 });
@@ -62,7 +71,8 @@ test.describe('touch', () => {
       const g = (window as unknown as { __wh: { game: { run: { truck: { addCargo(d: unknown, c: unknown[]): void } } } } }).__wh.game;
       g.run.truck.addCargo({ id: 'parcel', name: 'Parcel', desc: '', world: 1, mass: 4, height: 0.55, width: 0.9, value: 6, fragility: 0.1, grip: 0.8, crushLimit: Infinity }, []);
     });
+    await watchSheds(f);
     await f.locator('[data-testid=btn-shed]').tap();
-    await expect.poll(async () => (await state(f)).items).toBe(0);
+    await expect.poll(() => sheds(f)).toBe(1);
   });
 });
