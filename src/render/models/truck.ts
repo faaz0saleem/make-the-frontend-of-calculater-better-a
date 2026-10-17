@@ -37,7 +37,7 @@ const DARK = 0x262a33;
 const TIRE = 0x23252b;
 const HUB = 0xd9dde4;
 const LIGHT_HEAD = 0xfff4cc;
-const LIGHT_TAIL = 0xff4d4d;
+const LIGHT_TAIL = 0xf0302a;
 const LIGHT_IND = 0xffb02e;
 
 interface BuildCtx {
@@ -183,11 +183,11 @@ function pattern(ctx: BuildCtx, halfW: number, y0: number, y1: number, z0: numbe
   }
 }
 
-function headTail(ctx: BuildCtx, halfW: number, y: number, frontZ: number, rearZ: number): void {
+function headTail(ctx: BuildCtx, halfW: number, y: number, frontZ: number, rearZ: number, tail = true): void {
   const L = ctx.lights;
   for (const sx of [-1, 1]) {
     L.box(0.26, 0.16, 0.05, LIGHT_HEAD, sx * (halfW - 0.2), y, frontZ - 0.01, { r: 0.04 });
-    L.box(0.22, 0.14, 0.05, LIGHT_TAIL, sx * (halfW - 0.18), y, rearZ + 0.01, { r: 0.03 });
+    if (tail) L.box(0.22, 0.14, 0.05, LIGHT_TAIL, sx * (halfW - 0.18), y, rearZ + 0.01, { r: 0.03 });
     L.box(0.08, 0.06, 0.05, LIGHT_IND, sx * (halfW - 0.04), y - 0.12, frontZ - 0.01);
   }
 }
@@ -218,13 +218,19 @@ function buildPickup(ctx: BuildCtx): TruckAnchors {
   for (const sx of [-1, 1]) k.box(0.1, 0.32, 1.75, p.body, sx * (hw - 0.05), 0.95, 0.9, { r: 0.04 });
   k.box(hw * 2, 0.32, 0.1, p.body, 0, 0.95, 1.75, { r: 0.04 });
   k.box(hw * 1.8, 0.04, 1.6, shade(p.body, 0.75), 0, 0.83, 0.9);
+  // tailgate face (what the chase camera sees all game): pressed panel, handle, plate, tall tail lamps
+  k.box(hw * 1.3, 0.17, 0.02, shade(p.body, 0.86), 0, 0.93, 1.805, { r: 0.008 });
+  ctx.chrome.box(0.24, 0.045, 0.03, 0xe6ecf2, 0, 1.05, 1.81);
+  k.box(0.36, 0.14, 0.02, 0xf4f1e8, 0, 0.5, 1.92, { r: 0.01 });
+  k.box(0.26, 0.035, 0.012, 0x2b3a55, 0, 0.5, 1.932);
+  for (const sx of [-1, 1]) ctx.lights.box(0.13, 0.3, 0.04, LIGHT_TAIL, sx * (hw - 0.1), 0.92, 1.805, { r: 0.025 });
   // bumpers & trim
   k.box(hw * 2.04, 0.18, 0.18, p.trim, 0, 0.5, -1.82, { r: 0.07 });
   k.box(hw * 2.04, 0.18, 0.18, p.trim, 0, 0.5, 1.82, { r: 0.07 });
   k.box(0.9, 0.22, 0.04, DARK, 0, 0.82, -1.79, { r: 0.03 });
   for (const sx of [-1, 1]) k.box(0.02, 0.3, 0.02, shade(p.body, 0.7), sx * (hw + 0.002), 0.85, -0.55);
   pattern(ctx, hw, 0.55, 1.05, -1.75, 1.75, 1.13, -1.75, -1.08);
-  headTail(ctx, hw, 0.82, -1.8, 1.8);
+  headTail(ctx, hw, 0.82, -1.8, 1.8, false); // tall tail lamps are on the tailgate above
   mirrors(ctx, hw, 1.12, -1.05);
   ctx.chrome.box(0.86, 0.04, 0.04, 0xe6ecf2, 0, 0.92, -1.8);
   return { roofY: 1.5, roofZ: -0.7, hoodY: 1.12, hoodZ: -1.45, frontZ: -1.9, rearZ: 1.9, bedY: 0.85, bedZ: 0.9, bedLen: 1.6, bedHalfW: 0.78, wheelR: 0.36, width: hw * 2, columnsZ: [0] };

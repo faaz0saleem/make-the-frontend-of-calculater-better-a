@@ -79,7 +79,11 @@ class MaterialSet {
   windowLit = new THREE.MeshBasicMaterial({ vertexColors: true });
   road = new THREE.MeshStandardMaterial({ color: 0x626a78, roughness: 0.85, metalness: 0 });
   water = new THREE.MeshStandardMaterial({ color: 0x2fa3c7, roughness: 0.12, metalness: 0.2, transparent: true, opacity: 0.92, side: THREE.DoubleSide });
-  coin = new THREE.MeshStandardMaterial({ color: 0xffc93c, roughness: 0.28, metalness: 0.65, emissive: 0x6b4300, emissiveIntensity: 0.35 });
+  /**
+   * Road coins: vertex-coloured gold (rim/face/star) with a little self-light so they stay bright gold
+   * at night. The glow is tinted by the vertex colour, so rim, face and star keep their contrast.
+   */
+  coin = coinMaterial();
   puddle = new THREE.MeshStandardMaterial({ color: 0x5a7da8, roughness: 0.05, metalness: 0.6, transparent: true, opacity: 0.55, depthWrite: false });
   blob = new THREE.MeshBasicMaterial({ map: null, transparent: true, depthWrite: false, opacity: 0.85 });
   glowSprite = new THREE.SpriteMaterial({ map: null, color: 0xffffff, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false });
@@ -107,8 +111,17 @@ class MaterialSet {
     this.road.metalness = t.roadMetal;
     this.water.color.setHex(t.water);
     this.scenery.roughness = t.night ? 0.62 : 0.78;
+    this.coin.emissiveIntensity = t.night ? 0.55 : 0.22;
     this.road.needsUpdate = true;
   }
+}
+
+function coinMaterial(): THREE.MeshStandardMaterial {
+  const m = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.3, metalness: 0.35, emissive: 0xffffff, emissiveIntensity: 0.2 });
+  m.onBeforeCompile = (sh) => {
+    sh.fragmentShader = sh.fragmentShader.replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\n\ttotalEmissiveRadiance *= vColor.rgb;');
+  };
+  return m;
 }
 
 export const MAT = new MaterialSet();

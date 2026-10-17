@@ -22,6 +22,7 @@ export class RunView {
   private cur: Snap = { s: 0, x: 0, y: 0, vx: 0, vs: 0 };
   private pose = {} as Pose;
   private v = new THREE.Vector3();
+  private v2 = new THREE.Vector3();
   private fwd = new THREE.Vector3();
   private right = new THREE.Vector3();
   private time = 0;
@@ -195,15 +196,21 @@ export class RunView {
     if (run.state === 'crashed' && run.crashReason === 'barrier') yaw += Math.min(0.6, run.aftermathTime * 1.2) * Math.sign(tr.vx || 1);
     if (run.state === 'crashed' && run.crashReason === 'fell') pitch -= Math.min(0.9, run.aftermathTime * 1.5);
     r.truck.update(dt, tr, pos, yaw, pitch, this.time, this.reducedMotion);
-    // little exhaust puffs from the tailpipe (rear left, low)
-    if (run.state === 'running' && Math.random() < dt * 7) {
-      const ex = pos.clone().addScaledVector(this.fwd, -2.1).addScaledVector(this.right, -0.55);
-      r.particles.emit('smoke', ex.x, ex.y + 0.35, ex.z, 1, { color: r.theme.id === 3 ? 0x8a86a8 : 0xd6dae2, vx: -this.fwd.x * 1.5, vz: -this.fwd.z * 1.5 });
+    // Faint exhaust wisp just behind the tailpipe (rear left, low). The puffs leave the pipe at the
+    // truck's own speed, so (with the particle drag) they fall only a metre or so behind the bumper
+    // instead of streaming back into the chase camera, and they are small and short-lived.
+    const rearZ = r.truck.model?.anchors.rearZ ?? 1.9;
+    if (run.state === 'running' && Math.random() < dt * 12) {
+      const ex = this.v2.copy(pos).addScaledVector(this.fwd, -(rearZ + 0.12)).addScaledVector(this.right, -0.5);
+      const carry = Math.max(0, vs) - 0.8;
+      r.particles.emit('exhaust', ex.x, ex.y + 0.3, ex.z, 1, { color: r.theme.id === 3 ? 0x8a86a8 : 0xd6dae2, vx: this.fwd.x * carry, vz: this.fwd.z * carry });
     }
-    // dust behind wheels at speed / in canyon / puddle spray
-    if (run.state === 'running' && !tr.airborne && r.theme.id === 2 && Math.random() < dt * 10) {
-      const back = pos.clone().addScaledVector(this.fwd, -1.8);
-      r.particles.emit('dust', back.x, back.y + 0.1, back.z, 1, { color: 0xd9b48a, vx: -this.fwd.x * 2, vz: -this.fwd.z * 2 });
+    // low dust kicked up by the rear wheels in the canyon
+    if (run.state === 'running' && !tr.airborne && r.theme.id === 2 && vs > 4 && Math.random() < dt * 14) {
+      const side = Math.random() < 0.5 ? -1 : 1;
+      const back = this.v2.copy(pos).addScaledVector(this.fwd, -(rearZ - 0.6)).addScaledVector(this.right, side * 0.8);
+      const carry = vs * 0.92;
+      r.particles.emit('trail', back.x, back.y + 0.05, back.z, 1, { color: 0xd9b48a, vx: this.fwd.x * carry, vz: this.fwd.z * carry });
     }
     if (this.finishFx > 0) {
       this.finishFx -= dt;
@@ -226,6 +233,8 @@ export class RunView {
       if (f.s + f.len < camS - 8) continue;
       if (f.kind === 'overhead') ceiling = Math.min(ceiling, f.h - 0.45);
       if (f.kind === 'sign' && f.label === 'finish') ceiling = Math.min(ceiling, 6.2);
+      // route-sign gantry across the road (beam underside at ~6.1 m)
+      else if (f.kind === 'sign' && f.label && !f.label.startsWith('tip:') && Math.abs(f.x) < this.track.halfWidthAt(f.s) - 0.5) ceiling = Math.min(ceiling, 5.65);
       if (f.kind === 'depot') ceiling = Math.min(ceiling, 4.6);
     }
     r.follow.update(dt, pos, this.fwd, this.right, x, stackTop, vs, mode, this.time, ceiling - y);
